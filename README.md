@@ -6,7 +6,11 @@ The following is meant to be a guideline for reproducing the dataset using the s
 
 ## Network building/data extraction
 
-TODO: Add me
+Extract data from the Bialek network dataset into .csv files as described in Scripts/Network_latlon/README.md .
+Run Scripts/Network_latlon/1-Parse_network_data.py to build the first network.
+Run Scripts/Network_latlon/2-Fit_positions.py to add positional data to the network.
+
+
 
 ## Building Projection matrices for wind, solar and load
 
