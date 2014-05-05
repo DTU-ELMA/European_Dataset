@@ -10,13 +10,15 @@ Extract data from the Bialek network dataset into .csv files as described in Scr
 Run Scripts/Network_latlon/1-Parse_network_data.py to build the first network.
 Run Scripts/Network_latlon/2-Fit_positions.py to add positional data to the network.
 
-
-
-## Building Projection matrices for wind, solar and load
+## Renewable forecast data conversion
 
 TODO: Add me
 
-## Renewable data conversion to nodal production signals
+## Interpolating and converting real-time renewable production signal
+
+TODO: Add me
+
+## Building Projection matrices for wind, solar and load
 
 TODO: Add me
 
