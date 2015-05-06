@@ -1,7 +1,7 @@
-import numpy as np
+# import numpy as np
 import os
-import datetime
 import pygrib as pg
+import numpy as np
 import argparse
 import Myhelpers.defaults as defaults
 import scipy.sparse as sparse
@@ -11,7 +11,7 @@ from configobj import ConfigObj
 from validate import Validator
 from itertools import izip as zip
 from Myhelpers import write_datetime_string, parse_datetime_string
-
+from datetime import timedelta
 
 def fix_solar(L):
     '''
@@ -96,19 +96,36 @@ stopdate = '{0:04d}{1:02d}0100'.format(args.last+int(args.lm == 12), args.lm % 1
 # - Convert to capacity factors
 # - Project to nodal domain
 # - Save nodal forecast time series
+
+albold =0
+tmpold = 0
+Ibold = 0
+Idold = 0
+Igold = 0
+
 for cosmo_file in (x for x in fdir if x[0] != "."):
+
     print cosmo_file
 
     date = parse_datetime_string(cosmo_file)
+    previous = date + timedelta(hours = -1)
+
+    hour = previous.hour
 
     # Load file
     f = pg.open(args.rootdir + cosmo_file)
-    d = [x for x in f]
-    alb = np.array(d[13].values)
-    tmp2m = np.array(d[14].values)
-    Ib = np.array(d[17].values)
-    Id = np.array(d[18].values)
-    Ig = np.array(d[19].values)
+    d = [x.values for x in f]
+    alb = np.array(d[13]*(hour%6+1) - albold*(hour%6)).clip(0)
+    tmp = np.array(d[14]*(hour%6+1) - tmpold*(hour%6)).clip(0)
+    Ib = np.array(d[17]*(hour%6+1) - Ibold*(hour%6)).clip(0)
+    Id = np.array(d[18]*(hour%6+1) - Idold*(hour%6)).clip(0)
+    Ig = np.array(d[19]*(hour%6+1) - Igold*(hour%6)).clip(0)
+
+    albold = d[13]
+    tmpold = d[14]
+    Ibold = d[17]
+    Idold = d[18]
+    Igold = d[19]
 
     # dsfile = pg.open(args.rootdir + fdir + '/' + dsrname)
     # albfile = pg.open(args.rootdir + fdir + '/' + albname)
@@ -130,18 +147,18 @@ for cosmo_file in (x for x in fdir if x[0] != "."):
 
     #influx, outflux, tmp2m, utcTime, outidx = dsdata, usdata, tmpdata, dates, range(len(convdata)))
     influx_tilted = newHayDavies(Ib, Id, Ig, lats, lons, date, slopefunction)
-    out = SolarPVConversion((influx_tilted, tmp2m), panelconfig)
+    out = SolarPVConversion((influx_tilted, tmp), panelconfig)
     out /= (panelconfig['rated_production']/panelconfig['area'])
 
     #convdata[outidx] = np.nan_to_num(out)
 
     # Projection to nodal domain
-    #shape = convdata.shape
-    #outdata = solartransfer.dot(np.reshape(convdata, (shape[0], shape[1]*shape[2])).T).T
+    shape = out.shape
+    outdata = solartransfer.dot((out.flatten()).T).T
 
     # Save .npy file
     try:
-        np.savez_compressed(args.outdir + '/' + str(date.year) + '_' + str(date.month) + '_' + str(date.day) + '_' + str(date.hour) + '_' + filename, data=out, dates=date)
+        np.savez_compressed(args.outdir + '/' + str(date.year) + '_' + str(date.month) + '_' + str(date.day) + '_' + str(date.hour) + '_' + filename, data=outdata, dates=date)
     except IOError:
         os.mkdir(args.outdir + '/')
-        np.savez_compressed(args.outdir + '/' + str(date.year) + '_' + str(date.month) + '_' + str(date.day) + '_' + str(date.hour) + '_' + filename, data=out, dates=date)
+        np.savez_compressed(args.outdir + '/' + str(date.year) + '_' + str(date.month) + '_' + str(date.day) + '_' + str(date.hour) + '_' + filename, data=outdata, dates=date)

@@ -31,7 +31,7 @@ parser.add_argument('-ofc', '--offshoreconf', metavar="offshore_config_file", na
 
 args = parser.parse_args()
 
-onshoremap = np.load(args.onshoremap)['onshore']
+onshoremap = np.load(args.onshoremap)
 
 
 class Constant_Height_Interpolator:
@@ -92,7 +92,7 @@ wndtransfer = sparse.csr_matrix((wndtransfer['data'], wndtransfer['indices'], wn
 # load nodeorder file (used for saving)
 nodeorder = np.load(defaults.nodeorder)
 
-raise SystemExit
+#raise SystemExit
 
 hub_height = 114
 
@@ -133,36 +133,37 @@ for cosmo_file in (x for x in fdir if x[0] != "."):
     w = np.sqrt(u**2 + v**2)
 
     # Wind conversion
-    convdata = np.zeros_like(w)
+    #convdata = np.zeros_like(w)
 
     # Winds are sampled from the middle of model layers. Grib indexes from 1.
-    windheights = np.array([(heights[x['bottomLevel']-1]+heights[x['topLevel']-1] - 2*heights[-1]) for x in d[:6]])
+    windheights = np.array([(heights[x['bottomLevel']-1]+heights[x['topLevel']-1] - 2*heights[-1])/2 for x in d[:6]])
 
 
-    inter = Constant_Height_Interpolator(windheights, 114)
+    inter = Constant_Height_Interpolator(windheights, hub_height)
 
     out_windS = inter.interpolate_field_linear(w)
 
     out = convertWind(onshoreturbine, offshoreturbine, out_windS, onshoremap)
 
+    #idx = range(len(convdata))
     out[np.isnan(out)] = 0.0
     out[onshoremap] /= max(onshoreturbine['POW'])
     out[np.logical_not(onshoremap)] /= max(offshoreturbine['POW'])
-
+  
     
 
     # Projection to nodal domain
-    #shape = convdata.shape
-    #outdata = wndtransfer.dot(np.reshape(convdata, (shape[0], shape[1]*shape[2])).T).T
+    shape = out.shape
+    outdata = wndtransfer.dot((out.flatten()).T).T
 
-    raise SystemExit
+    #raise SystemExit
 
     # Save .npy file
     try:
-        np.savez_compressed(args.outdir + '/' + str(date.year) + '_' + str(date.month) + '_' + str(date.day) + '_' + str(date.hour) + '_' + filename, data=out, dates=date)
+        np.savez_compressed(args.outdir + '/' + str(date.year) + '_' + str(date.month) + '_' + str(date.day) + '_' + str(date.hour) + '_' + filename, data=outdata, dates=date)
     except IOError:
         os.mkdir(args.outdir + '/')
-        np.savez_compressed(args.outdir + '/' + str(date.year) + '_' + str(date.month) + '_' + str(date.day) + '_' + str(date.hour) + '_' + filename, data=out, dates=date)
+        np.savez_compressed(args.outdir + '/' + str(date.year) + '_' + str(date.month) + '_' + str(date.day) + '_' + str(date.hour) + '_' + filename, data=outdata, dates=date)
     #raise SystemExit
 
     # Large scale test case (41, 824, 848)
