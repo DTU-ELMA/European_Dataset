@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
 from latlon_to_spatial import latlonstospace
-from scipy.spatial import KDTree
+from scipy.spatial import cKDTree
 import scipy.sparse as sparse
 
 nodeorder = np.load('../../Data/Metadata/nodeorder.npy')
@@ -22,10 +22,10 @@ nodepos = nx.get_node_attributes(entsoe_grid, 'pos')
 nodepos = np.array([nodepos[n] for n in nodeorder])
 nodespos = latlonstospace(nodepos[:, 1], nodepos[:, 0])
 
-# Construct KDTrees for fast lookup
-nodetree = KDTree(nodespos)
-windgridtree = KDTree(windgridspos)
-solargridtree = KDTree(solargridspos)
+# Construct cKDTrees for fast lookup
+nodetree = cKDTree(nodespos)
+windgridtree = cKDTree(windgridspos)
+solargridtree = cKDTree(solargridspos)
 
 # # # WIND and LOAD transfer matrix contruction
 
