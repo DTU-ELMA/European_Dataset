@@ -141,8 +141,8 @@ void windLoop( size_t N, size_t M, const double windspeed10m[N][M], \
           printf("%f\t%f\t%f\n", v[i], onshoreSmoothedCurve[i], offshoreSmoothedCurve[i]);
      }
 */
-     lnh1 = log(100.);
-     lnh2 = log(10.);
+     lnh1 = log(10.);
+     lnh2 = log(100.);
      r = lnh2 - lnh1; // ln(h2/h1)
 	for (i = 0; i < N; i++) {
 		for (j = 0; j < M; j++) {

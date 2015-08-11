@@ -1,4 +1,5 @@
 Data/COSMO_Data/*
 Data/ECMWF-Data/*
 Data/Nodal_Power/*
+Data/Generator_Data/*.kml
 *.pyc

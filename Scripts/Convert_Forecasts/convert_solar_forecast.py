@@ -105,12 +105,9 @@ for fdir in forecastls:
     dsfile = pg.open(args.rootdir + fdir + '/' + dsrname)
     albfile = pg.open(args.rootdir + fdir + '/' + albname)
     tmpfile = pg.open(args.rootdir + fdir + '/' + tmpname)
-    # dsdata_int = np.array([ds['values'] for ds in dsfile])
-    # albdata = np.array([alb['values'] for alb in albfile])
-    # tmpdata = np.array([tmp['values'] for tmp in tmpfile])
-    dsdata_int = np.array([ds['values'][::-1] for ds in dsfile])
-    albdata = np.array([alb['values'][::-1] for alb in albfile])
-    tmpdata = np.array([tmp['values'][::-1] for tmp in tmpfile])
+    dsdata_int = np.array([ds['values'] for ds in dsfile])
+    albdata = np.array([alb['values'] for alb in albfile])
+    tmpdata = np.array([tmp['values'] for tmp in tmpfile])
 
     dsdata = fix_solar(dsdata_int)
     usdata = dsdata * albdata
@@ -126,7 +123,6 @@ for fdir in forecastls:
         out /= (panelconfig['rated_production']/panelconfig['area'])
         convdata[outidx] = np.nan_to_num(out)
 
-    raise SystemExit
     # Projection to nodal domain
     shape = convdata.shape
     outdata = solartransfer.dot(np.reshape(convdata, (shape[0], shape[1]*shape[2])).T).T

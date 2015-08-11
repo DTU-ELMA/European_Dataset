@@ -97,12 +97,10 @@ for fdir in forecastls:
     # Load wind files
     ufile = pg.open(args.rootdir + fdir + '/' + uname)
     vfile = pg.open(args.rootdir + fdir + '/' + vname)
-    # wlist = np.array([np.sqrt(u['values']**2 + v['values']**2) for u, v in zip(ufile, vfile)])
-    wlist = np.array([np.sqrt(u['values']**2 + v['values']**2)[::-1] for u, v in zip(ufile, vfile)])
+    wlist = np.array([np.sqrt(u['values']**2 + v['values']**2) for u, v in zip(ufile, vfile)])
     u100file = pg.open(args.rootdir + fdir + '/' + u100name)
     v100file = pg.open(args.rootdir + fdir + '/' + v100name)
-    # w100list = np.array([np.sqrt(u['values']**2 + v['values']**2) for u, v in zip(u100file, v100file)])
-    w100list = np.array([np.sqrt(u['values']**2 + v['values']**2)[::-1] for u, v in zip(u100file, v100file)])
+    w100list = np.array([np.sqrt(u['values']**2 + v['values']**2) for u, v in zip(u100file, v100file)])
 
     dates = [date + forecastdelta*i for i in range(len(wlist))]
 
@@ -126,4 +124,3 @@ for fdir in forecastls:
     except IOError:
         os.mkdir(args.outdir + '/' + fdir + '/')
         np.savez_compressed(args.outdir + '/' + fdir + '/' + filename, data=outdata, dates=dates)
-    raise SystemExit

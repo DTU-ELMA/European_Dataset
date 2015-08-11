@@ -123,14 +123,14 @@ def diffuseRadiation(latitude,longitude,utcTime,I,I_solar,sinalpha, mask):
 
 	T = float(latitude.shape[0] * latitude.shape[1]);
 
-	if (negIndex.any()):
-		print("Clearness of Sky index negative! " + utcTime.ctime(), file=sys.stderr);
-		print(numpy.min(ClearnessOfSkyIndex), file=sys.stderr);
-		print(numpy.where(negIndex == True)[0].shape[0]/T*100, file=sys.stderr);
-	if (toohighIndex.any()):
-		print("Clearness of Sky index (much) greater than 1! " + utcTime.ctime(), file=sys.stderr);
-		print(numpy.max(ClearnessOfSkyIndex), file=sys.stderr);
-		print(numpy.where(toohighIndex == True)[0].shape[0]/T*100, file=sys.stderr);
+	#if (negIndex.any()):
+		# 	print("Clearness of Sky index negative! " + utcTime.ctime(), file=sys.stderr);
+		# 	print(numpy.min(ClearnessOfSkyIndex), file=sys.stderr);
+		# 	print(numpy.where(negIndex == True)[0].shape[0]/T*100, file=sys.stderr);
+	#if (toohighIndex.any()):
+		# 	print("Clearness of Sky index (much) greater than 1! " + utcTime.ctime(), file=sys.stderr);
+		# 	print(numpy.max(ClearnessOfSkyIndex), file=sys.stderr);
+		# 	print(numpy.where(toohighIndex == True)[0].shape[0]/T*100, file=sys.stderr);
 	I_d[lowIndex] = 1.020 - 0.254*ClearnessOfSkyIndex[lowIndex] + 0.0123 * Z[lowIndex];
 	I_d[(lowIndex) & (I_d > 1.0)] = 1.0;
 	
