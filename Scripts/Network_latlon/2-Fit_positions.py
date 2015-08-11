@@ -139,9 +139,6 @@ nx.write_gpickle(G, metadatadir + 'network_postfit.gpickle')
 
 raise SystemExit
 
-nx.write_gpickle(G, metadatadir + 'network_postfit.gpickle')
-raise SystemExit
-
 # # Old method follows
 
 coeffs0 = [df.lat.mean(), 1, 0, 0, 0, 0, 0, 0, 0, 0, df.lon.mean(), 1, 0, 0, 0, 0, 0, 0, 0, 0]
