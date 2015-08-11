@@ -5,11 +5,9 @@ import seaborn as sns
 from scipy import ndimage
 
 f = ndimage.imread('onshore.png')
-# raise SystemExit
 
 onshore = np.sum(f, axis=2) > 400
 
-#raise SystemExit
 
 lats = np.arange(21, 73+0.001, 0.01)
 # Offset due to definition of grid
