@@ -10,6 +10,9 @@ convertyear = '2014'
 
 
 def get_relative_area_of_cells(lats, lons):
+    '''
+        Given a grid, estimate the area of each grid cell
+    '''
     lons, lats = np.deg2rad(np.unique(lons)), np.deg2rad(np.unique(lats))
     dlons, dlats = np.diff(lons), np.diff(np.sin(lats))
     dlons, dlats = np.interp(lons, lons[:-1] + dlons/2, dlons), np.interp(lats, lats[:-1] + dlats/2, dlats)
