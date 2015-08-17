@@ -1,5 +1,5 @@
 startyear = 2012
-startmonth = 01
+startmonth = 1
 endyear = 2014
 endmonth = 12
 
