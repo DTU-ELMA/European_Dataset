@@ -94,7 +94,8 @@ nodeorder = np.load(defaults.nodeorder)
 
 #raise SystemExit
 
-hub_height = 114
+hub_height_on = onshoreturbine['H']
+hub_height_off = offshoreturbine['H']
 
 fH = pg.open('metadata/HHL.grb')
 
@@ -139,7 +140,7 @@ for cosmo_file in (x for x in fdir if x[0] != "."):
     windheights = np.array([(heights[x['bottomLevel']-1]+heights[x['topLevel']-1] - 2*heights[-1])/2 for x in d[:6]])
 
 
-    inter = Constant_Height_Interpolator(windheights, hub_height)
+    inter = Constant_Height_Interpolator(windheights, hub_height_on)
 
     out_windS = inter.interpolate_field_linear(w)
 
