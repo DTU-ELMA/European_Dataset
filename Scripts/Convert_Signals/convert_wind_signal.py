@@ -15,8 +15,8 @@ from Myhelpers import write_datetime_string, parse_datetime_string
 # Argument parser
 parser = argparse.ArgumentParser(description='Wind conversion options')
 
-parser.add_argument('-r', '--rootdir', help='Input directory for forecast files', default=defaults.windforecastdatadir, metavar="forecast root")
-parser.add_argument('-o', '--outdir', help='Output directory for forecast files', default=defaults.windforecastoutdir, metavar="forecast outroot")
+parser.add_argument('-r', '--rootdir', help='Input directory for forecast files', default=defaults.windsignaldatadir, metavar="forecast root")
+parser.add_argument('-o', '--outdir', help='Output directory for forecast files', default=defaults.windsignaloutdir, metavar="forecast outroot")
 
 parser.add_argument('-f', '--first', help='First year to extract', default=defaults.startyear, type=int, metavar="first year")
 parser.add_argument('-l', '--last', help='Last year to extract', default=defaults.endyear, type=int, metavar="last year")
@@ -30,13 +30,13 @@ args = parser.parse_args()
 
 onshoremap = np.load(args.onshoremap)
 
-# We have a forecast for each hour
-forecastdelta = datetime.timedelta(hours=1)
+# # We have a forecast for each hour
+# forecastdelta = datetime.timedelta(hours=1)
 
-uname = 'ctr_P165_LSFC'
-vname = 'ctr_P166_LSFC'
-u100name = 'ctr_P246_LSFC'
-v100name = 'ctr_P247_LSFC'
+# uname = 'ctr_P165_LSFC'
+# vname = 'ctr_P166_LSFC'
+# u100name = 'ctr_P246_LSFC'
+# v100name = 'ctr_P247_LSFC'
 
 
 # Initialize turbine configurations
@@ -58,8 +58,9 @@ offshoreturbine.validate(Validator())
 
 
 # Set up filename
-filename = "WNDpower_onshore-%s_offshore-%s" % (onshoreturbine['name'], offshoreturbine['name'])
-filename = filename.replace(" ", "_")
+outfilename = "WNDpower_onshore-%s_offshore-%s" % (onshoreturbine['name'], offshoreturbine['name'])
+outfilename = outfilename.replace(" ", "_")
+outfilename += "-{0:04d}{1:02d}.npz"
 
 # Load matrix to project to nodal space
 wndtransfer = np.load(defaults.windprojectionmatrix)
@@ -68,63 +69,45 @@ wndtransfer = sparse.csr_matrix((wndtransfer['data'], wndtransfer['indices'], wn
 # load nodeorder file (used for saving)
 nodeorder = np.load(defaults.nodeorder)
 
-# Select only the forecasts specified for conversion.
-forecastls = sorted(os.listdir(args.rootdir))
-startdate = '{0:04d}{1:02d}0100'.format(args.first, args.fm)
-stopdate = '{0:04d}{1:02d}0100'.format(args.last+int(args.lm == 12), args.lm % 12 + 1)
+# Select only the months specified for conversion.
+windls = sorted(os.listdir(args.rootdir))
+windls = [x for x in windls if 'wnd10m' in x]
+filename = 'wnd10m-{0:04d}{1:02d}.npz'
+startdate = filename.format(args.first, args.fm)
+stopdate = filename.format(args.last+int(args.lm == 12),args.lm % 12+1)
 try:
-    startidx = forecastls.index(startdate)
+    startidx = windls.index(startdate)
 except ValueError:
-    print('Start month not found - check forecast directory')
+    print('Start month not found - check directory')
     raise ValueError
 try:
-    stopidx = forecastls.index(stopdate)
-    forecastls = forecastls[startidx:stopidx]
+    stopidx = windls.index(stopdate)
+    forecastls = windls[startidx:stopidx]
 except ValueError:
-    print 'Stopmonth+1 not found - assuming we need to use all directories'
-    forecastls = forecastls[startidx:]
+    print 'Stopdate + 1 month not found - assuming we need to use all time series'
+    forecastls = windls[startidx:]
 
 # MAIN LOOP
-# For each forecast:
+# For each timestep:
 # - Extract field of wind speeds
 # - Convert to capacity factors
 # - Project to nodal domain
-# - Save nodal forecast time series
-for fdir in forecastls:
-    print fdir
-    date = parse_datetime_string(fdir)
-
-    # Load wind files
-    ufile = pg.open(args.rootdir + fdir + '/' + uname)
-    vfile = pg.open(args.rootdir + fdir + '/' + vname)
-    # wlist = np.array([np.sqrt(u['values']**2 + v['values']**2) for u, v in zip(ufile, vfile)])
-    wlist = np.array([np.sqrt(u['values']**2 + v['values']**2)[::-1] for u, v in zip(ufile, vfile)])
-    u100file = pg.open(args.rootdir + fdir + '/' + u100name)
-    v100file = pg.open(args.rootdir + fdir + '/' + v100name)
-    # w100list = np.array([np.sqrt(u['values']**2 + v['values']**2) for u, v in zip(u100file, v100file)])
-    w100list = np.array([np.sqrt(u['values']**2 + v['values']**2)[::-1] for u, v in zip(u100file, v100file)])
-
-    dates = [date + forecastdelta*i for i in range(len(wlist))]
-
-    # Wind conversion
-    convdata = np.zeros_like(wlist)
-
-    for wind, wind100m, date, outidx in zip(wlist, w100list, dates, range(len(convdata))):
+# - Save time series
+for windfile in windls:
+    print windfile
+    thefile = np.load(args.rootdir + '/' + windfile)
+    the100mfile = np.load(args.rootdir + '/' + windfile.replace('wnd10m', 'wnd100m'))
+    data = thefile['data']
+    dates = thefile['dates']
+    data100m = the100mfile['data']
+    convdata = np.zeros_like(data)
+    for wind, wind100m, date, outidx in zip(data, data100m, dates, range(len(convdata))):
+        print date
         out = convertWind(onshoreturbine, offshoreturbine, wind, wind100m, onshoremap)
         out[np.isnan(out)] = 0.0
         out[onshoremap] /= max(onshoreturbine['POW'])
         out[np.logical_not(onshoremap)] /= max(offshoreturbine['POW'])
         convdata[outidx] = out
-
-    # Projection to nodal domain
-    shape = convdata.shape
+        shape = convdata.shape
     outdata = wndtransfer.dot(np.reshape(convdata, (shape[0], shape[1]*shape[2])).T).T
-
-    # Save .npy file
-    try:
-        np.savez_compressed(args.outdir + '/' + fdir + '/' + filename, data=outdata, dates=dates)
-    except IOError:
-        os.mkdir(args.outdir + '/' + fdir + '/')
-        np.savez_compressed(args.outdir + '/' + fdir + '/' + filename, data=outdata, dates=dates)
-    if forecastls.index(fdir) > 10:
-        raise SystemExit
+    np.savez(args.outdir + '/' + outfilename.format(dates[0].year, dates[0].month), data=outdata, dates=dates)
