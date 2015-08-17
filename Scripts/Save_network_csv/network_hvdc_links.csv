@@ -1,0 +1,2 @@
+ID, fromNode, toNode, capacity, voltage, length
+DC-ITA-GRC, 1514, 1513, 500.0, 400.0, 313.0
