@@ -2,14 +2,12 @@ import numpy as np
 import pandas as pd
 import os
 
-indir = '/media/tue/Data/Dataset/nodal_fc/'
-outdir = 'forecast_data/'
-nodeorder = np.load('/media/tue/Data/Dataset/metadata/nodeorder.npy')
+indir = '../../Data/Nodal_Forecasts/'
+outdir = '../../Output_Data/Nodal_FC/'
+nodeorder = np.load('../../Data/Metadata/nodeorder.npy')
 
 
 for fcdir in sorted(os.listdir(indir)):
-    if '2014' in fcdir:
-        continue
     print fcdir
     for filename in os.listdir(indir+fcdir):
         if 'WND' in filename and 'Siemens' in filename:
