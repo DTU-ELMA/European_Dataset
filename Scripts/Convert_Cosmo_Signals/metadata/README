@@ -1,1 +1,10 @@
-Metadatagoes in here.
+This directory contains a HHL.grb file which specifies the heights of model layers.
+
+The ordering of these is:
+
+Top layer
+   |
+   |
+Bottom layer
+
+Such that HHL[-1] is the groudn layer.
