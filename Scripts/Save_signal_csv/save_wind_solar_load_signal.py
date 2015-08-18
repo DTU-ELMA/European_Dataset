@@ -14,6 +14,8 @@ winddf = pd.concat(
     ) for filename in sorted(os.listdir(indir)) if 'WND' in filename and 'Siemens' in filename for f in [np.load(indir + filename)]]
 )
 
+print 'Loaded wind'
+
 solardf = pd.concat(
     [pd.DataFrame(
         index=f['dates'],
@@ -22,6 +24,8 @@ solardf = pd.concat(
     ) for filename in sorted(os.listdir(indir)) if 'PVpower' in filename for f in [np.load(indir + filename)]]
 )
 
+print 'Loaded solar'
+
 loaddf = pd.concat(
     [pd.DataFrame(
         index=f['dates'],
@@ -29,6 +33,9 @@ loaddf = pd.concat(
         columns=map(int, nodeorder)
     ) for filename in sorted(os.listdir(indir)) if 'load' in filename for f in [np.load(indir + filename)]]
 )
+
+
+print 'Loaded load'
 
 winddf = winddf[winddf.index < pd.Timestamp('2015-01-01 00:00:00')]
 solardf = solardf[solardf.index < pd.Timestamp('2015-01-01 00:00:00')]
