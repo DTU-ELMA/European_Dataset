@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 import os
 
-indir = '/media/tue/Data/Dataset/nodal_ts/'
-outdir = '/media/tue/Data/temp/'
-nodeorder = np.load('/media/tue/Data/Dataset/metadata/nodeorder.npy')
+indir = '../../Data/Nodal_Signal/'
+outdir = '../../Output_Data/Nodal_TS/'
+nodeorder = np.load('../../Data/Metadata/nodeorder.npy')
 
 winddf = pd.concat(
     [pd.DataFrame(
@@ -30,9 +30,9 @@ loaddf = pd.concat(
     ) for filename in sorted(os.listdir(indir)) if 'load' in filename for f in [np.load(indir + filename)]]
 )
 
-winddf = winddf[winddf.index < pd.Timestamp('2014-01-01 00:00:00')]
-solardf = solardf[solardf.index < pd.Timestamp('2014-01-01 00:00:00')]
-loaddf = loaddf[loaddf.index < pd.Timestamp('2014-01-01 00:00:00')]
+winddf = winddf[winddf.index < pd.Timestamp('2015-01-01 00:00:00')]
+solardf = solardf[solardf.index < pd.Timestamp('2015-01-01 00:00:00')]
+loaddf = loaddf[loaddf.index < pd.Timestamp('2015-01-01 00:00:00')]
 
 winddf.index.name = 'Time'
 solardf.index.name = 'Time'
