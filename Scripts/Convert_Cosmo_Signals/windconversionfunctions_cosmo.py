@@ -18,7 +18,6 @@ def Weibull(x,shape,scale):
 
 def convertWind(onshoreconf,offshoreconf,windspeed,onshoremap):
 
-     
      result = numpy.zeros_like(windspeed);
      
      # C expects contigous arrays. Numpy does not guarantee this.

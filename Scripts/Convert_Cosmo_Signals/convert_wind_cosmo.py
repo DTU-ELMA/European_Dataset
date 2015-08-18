@@ -33,10 +33,11 @@ args = parser.parse_args()
 
 onshoremap = np.load(args.onshoremap)
 
+raise SystemExit
 
 class Constant_Height_Interpolator:
 
-    def __init__(self, heights, single_level=80):
+    def __init__(self, heights, single_level):
         self.upper_mask = np.pad(np.diff(heights > single_level, axis=0), ((0, 1), (0, 0), (0, 0)), mode='constant', constant_values=False)
         self.lower_mask = np.pad(np.diff(heights > single_level, axis=0), ((1, 0), (0, 0), (0, 0)), mode='constant', constant_values=False)
         x1 = self._collapse_mask(heights, self.lower_mask)
@@ -94,7 +95,8 @@ nodeorder = np.load(defaults.nodeorder)
 
 #raise SystemExit
 
-hub_height = 114
+hub_height_on = 114
+hub_height_off = 114
 
 fH = pg.open('metadata/HHL.grb')
 
@@ -138,10 +140,11 @@ for cosmo_file in (x for x in fdir if x[0] != "."):
     # Winds are sampled from the middle of model layers. Grib indexes from 1.
     windheights = np.array([(heights[x['bottomLevel']-1]+heights[x['topLevel']-1] - 2*heights[-1])/2 for x in d[:6]])
 
+    inter_on = Constant_Height_Interpolator(windheights, hub_height_on)
+    inter_off = Constant_Height_Interpolator(windheights, hub_height_off)
 
-    inter = Constant_Height_Interpolator(windheights, hub_height)
-
-    out_windS = inter.interpolate_field_linear(w)
+    out_windS_on = inter_on.interpolate_field_linear(w)
+    out_windS_off = inter_on.interpolate_field_linear(w)
 
     out = convertWind(onshoreturbine, offshoreturbine, out_windS, onshoremap)
 
@@ -149,8 +152,6 @@ for cosmo_file in (x for x in fdir if x[0] != "."):
     out[np.isnan(out)] = 0.0
     out[onshoremap] /= max(onshoreturbine['POW'])
     out[np.logical_not(onshoremap)] /= max(offshoreturbine['POW'])
-  
-    
 
     # Projection to nodal domain
     shape = out.shape
