@@ -4,3 +4,8 @@ Data/Nodal_Power/*
 Data/Generator_Data/*.kml
 *.pyc
 *.py~
+Scripts/Geography_Mask/Earth_Data/*
+Scripts/Convert_Cosmo_Signals/3d_fields/*
+Scripts/Convert_Cosmo_Signals/Plots/*
+Scripts/Convert_Cosmo_Signals/TurbineData/*
+Scripts/Convert_Cosmo_Signals/SolarPanelData/*
