@@ -9,3 +9,11 @@ Scripts/Convert_Cosmo_Signals/3d_fields/*
 Scripts/Convert_Cosmo_Signals/Plots/*
 Scripts/Convert_Cosmo_Signals/TurbineData/*
 Scripts/Convert_Cosmo_Signals/SolarPanelData/*
+
+Scripts/Convert_Cosmo_Signals/metadata/HHL.grb
+
+*.save
+
+*.o
+
+*.so

@@ -33,8 +33,6 @@ args = parser.parse_args()
 
 onshoremap = np.load(args.onshoremap)
 
-raise SystemExit
-
 class Constant_Height_Interpolator:
 
     def __init__(self, heights, single_level):
@@ -122,7 +120,7 @@ stopdate = '{0:04d}{1:02d}0100'.format(args.last+int(args.lm == 12), args.lm % 1
 #     forecastls = forecastls[startidx:]
 
 for cosmo_file in (x for x in fdir if x[0] != "."):
-    
+
     print cosmo_file
 
     date = parse_datetime_string(cosmo_file)
@@ -143,10 +141,10 @@ for cosmo_file in (x for x in fdir if x[0] != "."):
     inter_on = Constant_Height_Interpolator(windheights, hub_height_on)
     inter_off = Constant_Height_Interpolator(windheights, hub_height_off)
 
-    inter = Constant_Height_Interpolator(windheights, hub_height_on)
-
     out_windS_on = inter_on.interpolate_field_linear(w)
     out_windS_off = inter_on.interpolate_field_linear(w)
+
+    out_windS = out_windS_on*onshoremap + out_windS_off*(-onshoremap)
 
     out = convertWind(onshoreturbine, offshoreturbine, out_windS, onshoremap)
 
