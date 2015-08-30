@@ -1,6 +1,7 @@
-Author: Tue Jensen
+Authors: Tue Jensen & Hugo de Sevin
 
-This repository contains a cleanup of my code for building the large-scale European dataset from ECMWF weather data, the Bialek network and GEO generator data.
+This repository contains code for building the large-scale European dataset from ECMWF weather data, COSMO data,  the Bialek network and GEO generator data.
+All scripts have been tested working as of 20/08 on machines running Ubuntu Linux 15.04, using python version 2.7.9, Pandas version 0.15.0, Numpy 1.8.2 and PyGrib 2.0.0.
 The following is meant to be a guideline for reproducing the dataset using the sources as indicated.
 
 
