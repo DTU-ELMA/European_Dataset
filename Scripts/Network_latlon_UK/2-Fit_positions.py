@@ -136,5 +136,5 @@ Y = {k: 1/v for k,v in X.iteritems()}
 
 #nx.set_node_attributes(G,'country',countrydict)
 
-nx.write_gpickle(G,metadatadir + 'network_postfit.gpickle')
+nx.write_gpickle(G,metadatadir + 'network_UK_postfit.gpickle')
 
