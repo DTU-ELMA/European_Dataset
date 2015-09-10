@@ -128,6 +128,13 @@ nx.set_node_attributes(G, 'pos', fitpos)
 countrydata = np.loadtxt('bus_countries.csv', dtype=str, delimiter=',')
 countrydict = {p[0]: p[1] for p in countrydata}
 
+# Nodes which are outside the modeled area are assigned to their connected country.
+outset = set(('UKR', 'SWE', 'NOR', 'GBR', 'MAR'))
+for n in G.nodes_iter():
+    if countrydict[n] in outset:
+        countrydict[n] = countrydict[G.edge[n].keys()[0]]
+
+
 Xdict = nx.get_edge_attributes(G, 'X')
 Ydict = {k: 1/v for k, v in Xdict.iteritems()}
 nx.set_edge_attributes(G, 'Y', Ydict)
