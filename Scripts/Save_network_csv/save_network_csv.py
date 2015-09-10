@@ -2,10 +2,12 @@ import numpy as np
 import networkx as nx
 import pandas as pd
 import pickle
+from great_circle_distance import gcdistance
 
-metadatadir = '/media/tue/Data/Dataset/metadata/'
+metadatadir = '../../Data/Metadata/'
+outdir = '../../Output_Data/Metadata/'
 
-G = nx.read_gpickle(metadatadir + 'entsoe_2009_final.gpickle')
+G = nx.read_gpickle(metadatadir + 'network_postfit.gpickle')
 nodeorder = np.load(metadatadir + 'nodeorder.npy')
 edgeorder = np.load(metadatadir + 'edgeorder.npy')
 noded = G.node
@@ -28,21 +30,23 @@ edgedf = pd.DataFrame(
         'limit': [edged[n1][n2]['limit'] for n1, n2 in edgeorder],
         'X': [edged[n1][n2]['X'] for n1, n2 in edgeorder],
         'Y': [edged[n1][n2]['Y'] for n1, n2 in edgeorder],
-        'length': [edged[n1][n2]['length'] for n1, n2 in edgeorder]
+        'length': [gcdistance(noded[n1]['pos'][1], noded[n2]['pos'][1], noded[n1]['pos'][0], noded[n2]['pos'][0]) for n1, n2 in edgeorder]
     },
     index=range(len(edgeorder))
 )
 
 # write .csv files
 nodedf.to_csv(
-    'network_nodes.csv',
+    outdir + 'network_nodes.csv',
     columns=['ID', 'name', 'country', 'voltage', 'latitude', 'longitude'],
-    index=False
+    index=False,
+    encoding='UTF-8'
 )
 edgedf.to_csv(
-    'network_edges.csv',
+    outdir + 'network_edges.csv',
     columns=['fromNode', 'toNode', 'X', 'Y', 'limit', 'length'],
-    index=False
+    index=False,
+    encoding='UTF-8'
 )
 
 gen = pickle.load(open(metadatadir + 'generator_database_affiliation.pickle'))
@@ -67,7 +71,7 @@ gendf = pd.DataFrame(
     }
 )
 gendf.to_csv(
-    'generator_info.csv',
+    outdir + 'generator_info.csv',
     columns=['ID', 'name', 'country', 'origin', 'latitude', 'longitude', 'status', 'primaryfuel', 'secondaryfuel', 'capacity', 'lincost', 'cyclecost', 'minuptime', 'mindowntime', 'minonlinecapacity'],
     index=False,
     encoding='UTF-8'
