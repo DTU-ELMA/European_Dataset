@@ -14,9 +14,12 @@ def fix_solar(L):
     '''
     Integrated field to hourly average values.
     Divides by 3600 to convert joule per hour to watt.
+    In a market context, the energy is assigned proactively to the following hour,
+    while the integrated field reports the accumulation over the last hour,
+    hence the appended 'measurement' should be at the end of the time series.
     '''
-    out = [L[0]/3600]
-    out.extend([x/3600 for x in np.diff(L, axis=0)])
+    out = [x/3600 for x in np.diff(L, axis=0)]
+    out.append(L[0]/3600)
     return out
 
 
