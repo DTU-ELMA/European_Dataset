@@ -105,8 +105,8 @@ for cosmo_file in (x for x in fdir if x[0] != "."):
     hour = previous.hour
 
     # Load file
-    f = pg.open(args.rootdir + cosmo_file)
-    d = [x.values for x in f]
+    with pg.open(args.rootdir + cosmo_file) as f:
+        d = [x.values for x in f]
     # Albedo
     alb = np.array(d[13]*(hour % 6+1) - albold*(hour % 6)).clip(0)
     # Temperature
