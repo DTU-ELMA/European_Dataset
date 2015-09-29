@@ -28,10 +28,12 @@ parser.add_argument('-lm', help='Last month to extract', default=defaults.endmon
 parser.add_argument('-onm', '--onshoremap', metavar="onshoremap", type=str, help='Numpy file containing the onshore map', default=defaults.onshoremapfilename)
 parser.add_argument('-onc', '--onshoreconf', metavar="onshore_config_file", nargs=1, type=str, help='File containing characteristics of the onshore wind turbine to use', default=defaults.onshoreturbinecfg)
 parser.add_argument('-ofc', '--offshoreconf', metavar="offshore_config_file", nargs=1, type=str, help='File containing characteristics of the offshore wind turbine to use', default=defaults.offshoreturbinecfg)
+parser.add_argument('-md', '--halfheightfile', help='Half-height layers file', default=defaults.halfheightfile, type=str, metavar="halfheightfile")
 
 args = parser.parse_args()
 
 onshoremap = np.load(args.onshoremap)
+
 
 class Constant_Height_Interpolator:
 
@@ -91,64 +93,78 @@ wndtransfer = sparse.csr_matrix((wndtransfer['data'], wndtransfer['indices'], wn
 # load nodeorder file (used for saving)
 nodeorder = np.load(defaults.nodeorder)
 
-#raise SystemExit
-
 hub_height_on = onshoreturbine['H']
 hub_height_off = offshoreturbine['H']
 
-fH = pg.open('metadata/HHL.grb')
+# Open half-height model levels file
+fH = pg.open(args.halfheightfile)
 
 heights = np.array([x.values for x in fH])
 lats, lons = x.latlons()
 
 fdir = sorted(os.listdir(args.rootdir))
 
-startdate = '{0:04d}{1:02d}0100'.format(args.first, args.fm)
-stopdate = '{0:04d}{1:02d}0100'.format(args.last+int(args.lm == 12), args.lm % 12 + 1)
+startdate = 'laf{0:04d}{1:02d}01000000'.format(args.first, args.fm)
+stopdate = 'laf{0:04d}{1:02d}01000000'.format(args.last+int(args.lm == 12), args.lm % 12 + 1)
 
-# Checking directory, unuseful here
-# try:
-#     startidx = forecastls.index(startdate)
-# except ValueError:
-#     print('Start month not found - check forecast directory')
-#     raise ValueError
-# try:
-#     stopidx = forecastls.index(stopdate)
-#     forecastls = forecastls[startidx:stopidx]
-# except ValueError:
-#     print 'Stopmonth+1 not found - assuming we need to use all directories'
-#     forecastls = forecastls[startidx:]
+try:
+    startidx = fdir.index(startdate)
+except ValueError:
+    print('Start month not found - check forecast directory')
+    raise ValueError
+try:
+    stopidx = fdir.index(stopdate)
+    fdir = fdir[startidx:stopidx]
+except ValueError:
+    print 'Stopmonth+1 not found - assuming we need to use all directories'
+    fdir = fdir[startidx:]
 
+
+converted_series = []
+times = []
+# wmean = 0
+# i = 1
 for cosmo_file in (x for x in fdir if x[0] != "."):
 
     print cosmo_file
 
     date = parse_datetime_string(cosmo_file)
 
+    with pg.open(args.rootdir + cosmo_file) as f:
+        d = [x for x in f]
+        u = np.array([x.values for x in d[:6]])
+        v = np.array([x.values for x in d[6:12]])
+        w = np.sqrt(u**2 + v**2)
+        # Some fields are malformed - cut away border from these fields
+        if w[0].shape != lats.shape:
+            flats, flons = d[0].latlons()
+            latdev = (flats[16:-16, 16:-16] - lats).max()
+            londev = (flons[16:-16, 16:-16] - lons).max()
+            print "Found malformed wind fields at {0}, latdev = {1:.03f}, londev = {2:.03f}".format(date, latdev, londev)
+            if latdev > 0.1 or londev > 0.1:
+                raise ValueError("Malformed fields outside lat/lon tolerance")
+            w = w[:, 16:-16, 16:-16]
 
-    f = pg.open(args.rootdir + cosmo_file)
-    d = [x for x in f]
-    u = np.array([x.values for x in d[:6]])
-    v = np.array([x.values for x in d[6:12]])
-    w = np.sqrt(u**2 + v**2)
+        # Winds are sampled from the middle of model layers. Grib indexes from 1.
+        windheights = np.array([(heights[x['bottomLevel']-1]+heights[x['topLevel']-1] - 2*heights[-1])/2 for x in d[:6]])
 
-    # Wind conversion
-    #convdata = np.zeros_like(w)
-
-    # Winds are sampled from the middle of model layers. Grib indexes from 1.
-    windheights = np.array([(heights[x['bottomLevel']-1]+heights[x['topLevel']-1] - 2*heights[-1])/2 for x in d[:6]])
-
+    # Build interpolators for onshore\offshore wind turbine
     inter_on = Constant_Height_Interpolator(windheights, hub_height_on)
     inter_off = Constant_Height_Interpolator(windheights, hub_height_off)
 
+    # Interpolate to hub height
     out_windS_on = inter_on.interpolate_field_linear(w)
     out_windS_off = inter_on.interpolate_field_linear(w)
 
-    out_windS = out_windS_on*onshoremap + out_windS_off*(-onshoremap)
+    out_windS = out_windS_on*onshoremap + out_windS_off*(1 - onshoremap)
+
+    # Sanity check code.
+    # wmean = ((i-1)*out_windS + wmean)/i
+    # i += 1
 
     out = convertWind(onshoreturbine, offshoreturbine, out_windS, onshoremap)
 
-    #idx = range(len(convdata))
+    # idx = range(len(convdata))
     out[np.isnan(out)] = 0.0
     out[onshoremap] /= max(onshoreturbine['POW'])
     out[np.logical_not(onshoremap)] /= max(offshoreturbine['POW'])
@@ -157,40 +173,15 @@ for cosmo_file in (x for x in fdir if x[0] != "."):
     shape = out.shape
     outdata = wndtransfer.dot((out.flatten()).T).T
 
-    #raise SystemExit
+    converted_series.append(outdata)
+    times.append(date)
 
-    # Save .npy file
-    try:
-        np.savez_compressed(args.outdir + '/' + str(date.year) + '_' + str(date.month) + '_' + str(date.day) + '_' + str(date.hour) + '_' + filename, data=outdata, dates=date)
-    except IOError:
-        os.mkdir(args.outdir + '/')
-        np.savez_compressed(args.outdir + '/' + str(date.year) + '_' + str(date.month) + '_' + str(date.day) + '_' + str(date.hour) + '_' + filename, data=outdata, dates=date)
-    #raise SystemExit
-
-    # Large scale test case (41, 824, 848)
-    # Build interpolator and interpolate once: 604ms
-    # Interpolation only: 125ms
-    # wnew = np.concatenate([w]*8, axis=0)[:41]
-    # internew = Constant_Height_Interpolator(heights-heights[-1], 114)
-
-    # upper_mask = np.pad(np.diff(windheights > hub_height, axis=0), ((0, 1), (0, 0), (0, 0)), mode='constant', constant_values=False)
-    # lower_mask = np.pad(np.diff(windheights > hub_height, axis=0), ((1, 0), (0, 0), (0, 0)), mode='constant', constant_values=False)
-
-    # # lower level, upper level heights
-    # x1 = collapse_mask(windheights, lower_mask)
-    # x2 = collapse_mask(windheights, upper_mask)
-    # c = (hub_height-x1)/(x2-x1)
-
-    # # y = c*y_2 + (1-c)*y_1
-    # out = c*collapse_mask(w, upper_mask) + (1-c)*collapse_mask(w, lower_mask)
-
-    # bottomlevelmask = heights.shape[0] - np.apply_along_axis(lambda a: a.searchsorted(hub_height), axis=0, arr=(heights-heights[-1])[::-1])
-    # bottomheight = np.zeros_like(bottomlevelmask)
-    # topheight = np.zeros_like(bottomlevelmask)
-
-    # displacement = (heights-heights[-1])
-
-    # for i in np.ndindex(*(bottomlevelmask.shape)):
-    #     bottomheight[i] = displacement[bottomlevelmask[i], i[0], i[1]]
-    #     topheight[i] = displacement[bottomlevelmask[i]-1, i[0], i[1]]
-
+# Store using HDF5 for fast loading.
+outdf = pd.DataFrame(data=converted_series, index=times, columns=nodeorder)
+store = pd.HDFStore(defaults.windoutdir + 'COSMO-store.h5')
+try:
+    olddf = store['COSMO/wind']
+    store['COSMO/wind'] = outdf.combine_first(olddf)
+except KeyError:
+    store['COSMO/wind'] = outdf
+store.close()
