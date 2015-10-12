@@ -101,28 +101,30 @@ for cosmo_file in (x for x in fdir if x[0] != "."):
 
     date = parse_datetime_string(cosmo_file)
     previous = date + timedelta(hours=-1)
-
     hour = previous.hour
 
     # Load file
     with pg.open(args.rootdir + cosmo_file) as f:
-        d = [x.values for x in f]
-    # Albedo
-    alb = np.array(d[13]*(hour % 6+1) - albold*(hour % 6)).clip(0)
+        # Fix for field order being jumbled in 2013
+        for m in f:
+            if m.name == u'2 metre temperature':
+                tmpnew = m.values
+        Ibnew = f[18].values
+        Idnew = f[19].values
+        Ignew = f[20].values
     # Temperature
-    tmp = np.array(d[14]*(hour % 6+1) - tmpold*(hour % 6)).clip(0)
+    tmp = np.array(tmpnew*(hour % 6+1) - tmpold*(hour % 6)).clip(0)
     # Irradiation beam
-    Ib = np.array(d[17]*(hour % 6+1) - Ibold*(hour % 6)).clip(0)
+    Ib = np.array(Ibnew*(hour % 6+1) - Ibold*(hour % 6)).clip(0)
     # Irradiation diffuse
-    Id = np.array(d[18]*(hour % 6+1) - Idold*(hour % 6)).clip(0)
+    Id = np.array(Idnew*(hour % 6+1) - Idold*(hour % 6)).clip(0)
     # Irradiation ground
-    Ig = np.array(d[19]*(hour % 6+1) - Igold*(hour % 6)).clip(0)
+    Ig = np.array(Ignew*(hour % 6+1) - Igold*(hour % 6)).clip(0)
 
-    albold = d[13]
-    tmpold = d[14]
-    Ibold = d[17]
-    Idold = d[18]
-    Igold = d[19]
+    tmpold = tmpnew
+    Ibold = Ibnew
+    Idold = Idnew
+    Igold = Ignew
 
     # solar conversion
     influx_tilted = newHayDavies(Ib, Id, Ig, lats, lons, date, slopefunction)
@@ -140,7 +142,12 @@ for cosmo_file in (x for x in fdir if x[0] != "."):
     converted_series.append(outdata)
     times.append(date)
 
+    if date.hour == 14:
+        break
+
 outdf = pd.DataFrame(data=converted_series, index=times, columns=nodeorder)
+
+raise SystemExit
 store = pd.HDFStore(defaults.windoutdir + 'COSMO-store.h5')
 try:
     olddf = store['COSMO/solar']
