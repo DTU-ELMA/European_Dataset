@@ -106,22 +106,25 @@ for cosmo_file in (x for x in fdir if x[0] != "."):
     # Load file
     with pg.open(args.rootdir + cosmo_file) as f:
         # Fix for field order being jumbled in 2013
-        for m in f:
-            if m.name == u'2 metre temperature':
-                tmpnew = m.values
+        if f[15].name == u'2 metre temperature':
+            tmpnew = f[15].values
+        else:
+            for m in f:
+                if m.name == u'2 metre temperature':
+                    tmpnew = m.values
+                    break
         Ibnew = f[18].values
         Idnew = f[19].values
         Ignew = f[20].values
-    # Temperature
-    tmp = np.array(tmpnew*(hour % 6+1) - tmpold*(hour % 6)).clip(0)
-    # Irradiation beam
+    # Temperature (instantaneous field)
+    tmp = tmpnew
+    # Irradiation beam (integrated field)
     Ib = np.array(Ibnew*(hour % 6+1) - Ibold*(hour % 6)).clip(0)
-    # Irradiation diffuse
+    # Irradiation diffuse (integrated field)
     Id = np.array(Idnew*(hour % 6+1) - Idold*(hour % 6)).clip(0)
-    # Irradiation ground
+    # Irradiation ground (integrated field)
     Ig = np.array(Ignew*(hour % 6+1) - Igold*(hour % 6)).clip(0)
 
-    tmpold = tmpnew
     Ibold = Ibnew
     Idold = Idnew
     Igold = Ignew
@@ -142,12 +145,8 @@ for cosmo_file in (x for x in fdir if x[0] != "."):
     converted_series.append(outdata)
     times.append(date)
 
-    if date.hour == 14:
-        break
-
 outdf = pd.DataFrame(data=converted_series, index=times, columns=nodeorder)
 
-raise SystemExit
 store = pd.HDFStore(defaults.windoutdir + 'COSMO-store.h5')
 try:
     olddf = store['COSMO/solar']
