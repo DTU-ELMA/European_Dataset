@@ -76,3 +76,16 @@ gendf.to_csv(
     index=False,
     encoding='UTF-8'
 )
+
+# # HVDC links - manual input for now
+dcdf = pd.DataFrame(
+    columns=['ID', 'fromNode', 'toNode', 'limit', 'voltage', 'length'],
+    data=[['DC-ITA-GRC', 1514, 1513, 500.0, 400.0, 313.0]]
+)
+
+dcdf.to_csv(
+    outdir + 'network_hvdc_links.csv',
+    columns=['ID', 'fromNode', 'toNode', 'limit', 'voltage', 'length'],
+    index=False,
+    encoding='UTF-8'
+)
