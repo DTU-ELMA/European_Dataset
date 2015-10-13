@@ -1,7 +1,7 @@
 startyear = 2012
-startmonth = 01
-endyear = 2012
-endmonth = 01
+startmonth = 1
+endyear = 2014
+endmonth = 12
 
 # Geographical files
 
@@ -11,7 +11,8 @@ latitudefile = '../../Data/Metadata/lats_COSMO.npy'
 longitudefile = '../../Data/Metadata/lons_COSMO.npy'
 
 # Wind files
-
+# File with info on model half-height levels.
+halfheightfile = "metadata/HHL.grb"
 # onshoreturbinecfg = 'TurbineData/Vestas_V90_3MW.cfg'
 # offshoreturbinecfg = 'TurbineData/Vestas_V164_7MW_offshore.cfg'
 onshoreturbinecfg = 'TurbineData/Siemens_SWT_107_3600kW_smoothed.cfg'
