@@ -45,8 +45,8 @@ winddf.index.name = 'Time'
 solardf.index.name = 'Time'
 loaddf.index.name = 'Time'
 
-winddf.to_csv(outdir + 'wind_signal.csv', float_format='%.4f')
-solardf.to_csv(outdir + 'solar_signal.csv', float_format='%.4f')
+winddf.to_csv(outdir + 'wind_signal_ECMWF.csv', float_format='%.4f')
+solardf.to_csv(outdir + 'solar_signal_ECMWF.csv', float_format='%.4f')
 loaddf.to_csv(outdir + 'load_signal.csv', float_format='%.4f')
 
 raise SystemExit
