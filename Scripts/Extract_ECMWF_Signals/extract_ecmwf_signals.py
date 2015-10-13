@@ -57,7 +57,7 @@ tmp2mname = 'tmp2m'
 directories = sorted(os.listdir(indir))
 
 # Cut directories to extract from
-directories = directories[directories.index('2014110100'):directories.index('2015010100')]
+directories = directories[directories.index('2012010100'):directories.index('2015010100')]
 
 tswind, tswind100, tstimes = [], [], []
 tsdsolar, tsusolar, tstmp = [], [], []
