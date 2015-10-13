@@ -147,6 +147,10 @@ for cosmo_file in (x for x in fdir if x[0] != "."):
 
 outdf = pd.DataFrame(data=converted_series, index=times, columns=nodeorder)
 
+# As a side effect of the de-averaging, the signals are off by one hour compared
+# to the ECMWF data. This shift aligns the signals.
+outdf = outdf.shift(-1)
+
 store = pd.HDFStore(defaults.windoutdir + 'COSMO-store.h5')
 try:
     olddf = store['COSMO/solar']
