@@ -142,25 +142,3 @@ nx.set_edge_attributes(G, 'Y', Ydict)
 nx.set_node_attributes(G, 'country', countrydict)
 
 nx.write_gpickle(G, metadatadir + 'network_postfit.gpickle')
-
-
-raise SystemExit
-
-# # Old method follows
-
-coeffs0 = [df.lat.mean(), 1, 0, 0, 0, 0, 0, 0, 0, 0, df.lon.mean(), 1, 0, 0, 0, 0, 0, 0, 0, 0]
-coeffs0 = coeffs0 + np.random.normal(size=len(coeffs0))*0.1
-
-data = np.loadtxt('coordinates-mercator.txt', usecols=(0, 1, 2, 3), skiprows=1)
-mappoints = data[:, 0:2]
-latlons = data[:, 2:4]
-
-to_opt = lambda z, x=mappoints, y=latlons: to_fit(x, y, z)
-
-optimal = opt.minimize(to_opt, coeffs0, method='Powell', options={'maxfev': 100000, 'maxiter': 50000})
-opted = np.array([func(p, optimal['x']) for p in mappoints])
-
-G = nx.read_gpickle(metadatadir + 'network_prefit.gpickle')
-pos = nx.get_node_attributes(G, 'pos')
-fitpos = {k: func(v, optimal['x'])[::-1] for k, v in pos.iteritems()}
-nx.set_node_attributes(G, 'pos', fitpos)
