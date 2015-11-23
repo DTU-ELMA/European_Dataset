@@ -5,7 +5,7 @@
 #define MAXWIND 40.0
 #define STEPS 160
 
-// Changed to use fields at 10m and 100m to interpolate hub height wind speeds.
+// Assumes wind speed fields are given at hub height.
 
 // linear interpolation. x is the desired values,
 // x is the x values of the interpolation points
