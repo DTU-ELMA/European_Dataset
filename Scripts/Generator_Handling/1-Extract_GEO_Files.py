@@ -180,7 +180,9 @@ for g in database.iterkeys():
 lincosts = {u'Biomass': 39.5, 'Coal': 38.6, 'Fuel Oil': 122.2, 'Geothermal': 0.0, 'Hydro': 6.4, 'Lignite': 23.8,
             'Natural Gas': 55.6, 'Nuclear': 11.8, 'Unknown': 130.0, 'Waste': 39.5}
 
+# Jitter generators by +-10%
 for g in database.iterkeys():
+    random.seed(g)
     database[g]['lincost'] = lincosts[database[g]['primaryfuel']]*(random.random()*0.2+0.9)
 
 
@@ -197,15 +199,35 @@ for g in database.iterkeys():
     database[g]['mindowntime'] = downtimes[f]
 
 
+# # Set production of generators which are exported incorrectly from the database.
+tosetlist = {
+    '2175': 2060.,
+    '2605': 270.,
+    '2609': 1412.,
+    '2947': 800.,
+    '3913': 730.,
+    '43676': 855.3,
+    '4396': 372.,
+    '45044': 345.,
+    '4938': 868.,
+    '5270': 466.,
+    '5682': 2026.,
+    '5910': 2087.
+}
+for g, p in tosetlist.iteritems():
+    database[g]['capacity'] = p
+
 # # Minimal production set by fuel type
-mincapacity = {u'Biomass': 0.20, 'Coal': 0.20,   # http://ebooks.asmedigitalcollection.asme.org/content.aspx?bookid=240&sectionid=38774800
+mincapacity = {u'Biomass': 0.20,
+               'Coal': 0.20,   # http://ebooks.asmedigitalcollection.asme.org/content.aspx?bookid=240&sectionid=38774800
                'Fuel Oil': 0.40,
-               'Geothermal': 0.20, # http://egec.info/wp-content/uploads/2014/10/Flex-Factsheet-Web-Version.pdf
+               'Geothermal': 0.20,  # http://egec.info/wp-content/uploads/2014/10/Flex-Factsheet-Web-Version.pdf
                'Hydro': 0.10,  # http://www.nzdl.org/gsdlmod?e=d-00000-00---off-0cdl--00-0----0-10-0---0---0direct-10---4-------0-1l--11-en-50---20-about---00-0-1-00-0-0-11-1-0utfZz-8-10&a=d&cl=CL2.12&d=HASH12e30488fe16525235d00f.8.2
-               'Lignite': 0.20,
+               'Lignite': 0.20,  # Assumed same as coal
                'Natural Gas': 0.40,   # http://www.alstom.com/Global/Power/Resources/Documents/Brochures/gas-power-plants.pdf
                'Nuclear': 0.20,  # http://www.iaea.org/NuclearPower/Meetings/2013/2013-09-04-09-06-TM-NPE.html
-               'Unknown': 0.40, 'Waste': 0.20}
+               'Unknown': 0.40,
+               'Waste': 0.20}
 
 for g in database.iterkeys():
     database[g]['minonlinecapacity'] = mincapacity[database[g]['primaryfuel']]*database[g]['capacity']
@@ -240,25 +262,6 @@ toremovelist = [
 ]
 
 database = {k: v for k, v in database.iteritems() if k not in toremovelist}
-
-
-# # Set production of generators which are exported incorrectly from the database.
-tosetlist = {
-    '2175': 2060.,
-    '2605': 270.,
-    '2609': 1412.,
-    '2947': 800.,
-    '3913': 730.,
-    '43676': 855.3,
-    '4396': 372.,
-    '45044': 345.,
-    '4938': 868.,
-    '5270': 466.,
-    '5682': 2026.,
-    '5910': 2087.
-}
-for g, p in tosetlist.iteritems():
-    database[g]['capacity'] = p
 
 
 pickle.dump(database, open(metadatadir + 'generator_database_no_affiliation.pickle', 'w'))
