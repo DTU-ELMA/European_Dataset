@@ -15,6 +15,8 @@ solardf = store['COSMO/solar']
 
 print 'Loaded solar'
 
+store.close()
+
 winddf = winddf[winddf.index < pd.Timestamp('2015-01-01 00:00:00')]
 solardf = solardf[solardf.index < pd.Timestamp('2015-01-01 00:00:00')]
 
