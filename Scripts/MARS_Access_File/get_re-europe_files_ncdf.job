@@ -1,0 +1,81 @@
+#@ shell           = /usr/bin/ksh 
+##### intialdir: Where downloaded files will be located.
+##### Must end in \
+#@ initialdir      = \changeme\notarealfolder\
+#@ class           = long
+#@ job_name        = get_re-europe_files_ncdf 
+#@ output          = $(job_name).$(host).$(jobid).out 
+#@ error           = $(job_name).$(host).$(jobid).out 
+#@ environment     = COPY_ALL 
+#@ notification    = error  
+#@ job_cpu_limit   = 1000:15:00,1000:10:55 
+#@ wall_clock_limit= 1000:05:00,1000:04:50 
+#@ queue  
+#
+#----------------------------------------------------
+# job to retrieve DET forecast data (high-res surface forecast)
+#----------------------------------------------------
+#
+set -e # stop the shell on first error
+set -u # fail when using an undefined variable
+#
+cd $TMPDIR
+pwd
+#
+ls -l
+#
+# Setup variables
+#
+#### Forecast lookahead times
+STP_START=0
+STP_END=90
+STP_DELTA=1
+#### Time period to extract.
+DATE_START=20140101
+DATE_END=20150101
+echo 'DATE_START: ' $DATE_START
+echo 'DATE_END: ' $DATE_END
+#
+# loop over dates to be retrieved
+#
+DATE=$DATE_START
+while (( $DATE <= ${DATE_END} )) ; do
+#
+for TIME in 00 12; do # in 00 12
+#
+DISK=${initialdir}
+DISKDATA=${initialdir}${DATE}${TIME}'/'
+if [[ ! -d $DISKDATA ]]; then
+   mkdir -p $DISKDATA
+fi
+#
+# retrieve data for this range of dates
+#
+cat > mars_get.inp <<EOF
+retrieve,
+  class    = od,
+  expver   = 1,
+  stream   = oper,
+  type     = fc,
+  levtype  = sfc,
+  param    = 165/166/167/169/243/246/247,
+  grid     = 0.125/0.125,
+  area     = 72/-12/33/41,
+  date     = ${DATE},
+  time     = ${TIME},
+  step     = ${STP_START}/to/${STP_END}/by/${STP_DELTA},
+  use      = infrequent,
+  target   = "${DISKDATA}ctr_P[param]_LSFC" 
+EOF
+#
+echo 'now retrieving for date: '$DATE
+mars < mars_get.inp 
+#
+#
+done # do TIME
+#
+DATE=`newdate -D $DATE +1`
+done # while DATE
+#
+echo "finished retrieving data"
+#
