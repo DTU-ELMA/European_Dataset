@@ -1,4 +1,7 @@
+# RE-Europe dataset code
+
 Authors: Tue Jensen & Hugo de Sevin
+
 This repository is licensed CC-BY. See LICENSE.markdown for further information.
 
 This repository contains code for building the large-scale European dataset from ECMWF weather data, COSMO data,  the Bialek network and GEO generator data.
