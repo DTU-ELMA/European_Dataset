@@ -11,7 +11,7 @@ from configobj import ConfigObj
 from validate import Validator
 from itertools import izip as zip
 from Myhelpers import write_datetime_string, parse_datetime_string
-
+from myslopefunctions import fixedSlopeFunction, optimalSlopeFunction
 
 def fix_solar(L):
     '''
@@ -39,8 +39,8 @@ parser.add_argument('-lo', '--lonfile', help='Longitude file', default=defaults.
 
 args = parser.parse_args()
 
-lats = np.load(args.latfile)
-lons = np.load(args.lonfile)
+lats = np.load(args.latfile)[120:240,120:240]
+lons = np.load(args.lonfile)[120:240,120:240]
 
 # We have a forecast for each hour
 forecastdelta = datetime.timedelta(hours=1)
@@ -53,6 +53,7 @@ tmp2mfilename = 'tmp2m-{}.npz'
 # PV slope function:
 # Panel angled at 30 deg from horizontal
 slopefunction = testSlopeFunction
+
 
 # Initialize panel configurations
 configspec = ConfigObj(
@@ -103,28 +104,47 @@ except ValueError:
     uswsfcls = uswsfcls[usstartidx:]
     tmpls = tmpls[tmpstartidx:]
 
+incsdict = {30: 0.3, 40: 0.4, 50: 0.3}
+orientdict = {0.0: 0.40, -45: 0.30, 45: 0.30}
+
+# incsdict = {30: 1.0}
+# orientdict = {0.0: 1.0}
+
+outfilename = "PV-mixv2GER-{0:04d}{1:02d}.npz"
+# outfilename = "PV-optdeg-{0:04d}{1:02d}.npz"
+
 # MAIN LOOP
 # For each forecast:
 # - Load fields of downward radiation, upward radiation and temperature
 # - Convert to capacity factors
 # - Project to nodal domain
 # - Save nodal forecast time series
+maxprod = 0
 for dsolarfile, usolarfile, tmp2mfile in zip(dswsfcls, uswsfcls, tmpls):
     print dsolarfile
     dsfile = np.load(args.rootdir + '/' + dsolarfile)
     usfile = np.load(args.rootdir + '/' + usolarfile)
     tmpfile = np.load(args.rootdir + '/' + tmp2mfile)
-    dsdata = dsfile['data']
-    usdata = usfile['data']
-    tmpdata = tmpfile['data']
+    dsdata = dsfile['data'][:, 120:240, 120:240]
+    usdata = usfile['data'][:, 120:240, 120:240]
+    tmpdata = tmpfile['data'][:, 120:240, 120:240]
     dates = dsfile['dates']
     convdata = np.zeros_like(dsdata)
     for influx, outflux, tmp2m, utcTime, outidx in zip(dsdata, usdata, tmpdata, dates, range(len(convdata))):
-        influx_tilted = newHayDavies(influx, outflux, lats, lons, utcTime, slopefunction)
-        out = SolarPVConversion((influx_tilted, tmp2m), panelconfig)
-        out /= (panelconfig['rated_production']/panelconfig['area'])
-        convdata[outidx] = np.nan_to_num(out)
+        if utcTime.hour == 00:
+            print utcTime
+        for i, wi in incsdict.iteritems():
+            for o, wo in orientdict.iteritems():
+                def slopefunction(x, y, z, i=i, o=o):
+                    return optimalSlopeFunction(x, y, z)
+                    return fixedSlopeFunction(x, y, z, i, o)
+                influx_tilted = newHayDavies(influx, outflux, lats, lons, utcTime, slopefunction)
+                out = SolarPVConversion((influx_tilted, tmp2m), panelconfig)
+                out /= (panelconfig['rated_production']/panelconfig['area'])
+                convdata[outidx] += wi*wo*np.nan_to_num(out)
+    maxprod = np.max(convdata, axis=0)
     shape = convdata.shape
-    outdata = solartransfer.dot(np.reshape(convdata, (shape[0], shape[1]*shape[2])).T).T
-
-    np.savez_compressed(args.outdir + '/' + outfilename.format(dates[0].year, dates[0].month), data=outdata, dates=dates)
+    # outdata = solartransfer.dot(np.reshape(convdata, (shape[0], shape[1]*shape[2])).T).T
+    outdata = convdata
+    np.savez_compressed(args.outdir + '/' + outfilename.format(dates[0].year, dates[0].month), data=outdata, dates=dates, maxprod=maxprod)
+    # np.savez_compressed(args.outdir + '/' + outfilename.format(dates[0].year, dates[0].month), data=outdata, dates=dates, maxprod=maxprod)

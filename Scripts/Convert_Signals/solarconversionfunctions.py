@@ -1,238 +1,255 @@
 
 from __future__ import print_function
 import numpy
-from numpy import zeros,log,cos,sin,tan,sqrt,abs,arcsin,arccos,ones
+from numpy import zeros,log,cos,sin,tan,sqrt,abs,arcsin,arccos,ones,deg2rad
 from math import pi
 import datetime
 import sys
 
+VERBOSE = False
 
 def dayNum(utcTime):
-	year = utcTime.year;
-	#leapyear = (year%4 == 0 and (year%100 != 0 or year%400 == 0));
-	startofyear = datetime.datetime(year,1,1);
-	endofyear = datetime.datetime(year,12,31);
-	dayNumber = (utcTime - startofyear).days;
-	numberOfDays = (endofyear - startofyear).days;
+    year = utcTime.year;
+    #leapyear = (year%4 == 0 and (year%100 != 0 or year%400 == 0));
+    startofyear = datetime.datetime(year,1,1);
+    endofyear = datetime.datetime(year,12,31);
+    dayNumber = (utcTime - startofyear).days;
+    numberOfDays = (endofyear - startofyear).days;
 
-	return (dayNumber, numberOfDays);
+    return (dayNumber, numberOfDays);
 
 def dayAngle(utcTime):
-	(dayNumber, numberOfDays) = dayNum(utcTime);
+    (dayNumber, numberOfDays) = dayNum(utcTime);
 
-	dayAngle = 2*pi*dayNumber/numberOfDays;
+    dayAngle = 2*pi*dayNumber/numberOfDays;
 
-	return dayAngle;
+    return dayAngle;
 
 
 def equationOfTime(utcTime):
-	dayNumber, numberOfDays = dayNum(utcTime);
-	B = 2*pi*(dayNumber-81.0)/numberOfDays;
+    dayNumber, numberOfDays = dayNum(utcTime);
+    B = 2*pi*(dayNumber-81.0)/numberOfDays;
 
-	ET = 9.87*sin(2*B)-7.53*cos(B)-1.5*sin(B);
+    ET = 9.87*sin(2*B)-7.53*cos(B)-1.5*sin(B);
 
-	return ET; # in minutes, formula found on p. 50 in Solar Engineering
+    return ET; # in minutes, formula found on p. 50 in Solar Engineering
 
 def apparentSolarTime(longitude,utcTime): # in hours
-	return (60*utcTime.hour + utcTime.minute + equationOfTime(utcTime) + 4*longitude)/60;
+    return (60*utcTime.hour + utcTime.minute + equationOfTime(utcTime) + 4*longitude)/60;
 
 def hourAngle(longitude,utcTime):
-	return 15*(apparentSolarTime(longitude,utcTime) - 12)/180.0*pi;
+    return 15*(apparentSolarTime(longitude,utcTime) - 12)/180.0*pi;
 
 def solarConstant(utcTime):
-	S = 1366.1; # Solar constant, in Watts/m^2, from solar engineering
-	return S*(1 + 0.033*cos(dayAngle(utcTime)));
+    S = 1366.1; # Solar constant, in Watts/m^2, from solar engineering
+    return S*(1 + 0.033*cos(dayAngle(utcTime)));
 
 
 def declination(utcTime): # delta in litterature
-	
-	d = dayAngle(utcTime);
+    
+    d = dayAngle(utcTime);
 
-	decl = 0.006918 - 0.399912*cos(d) + 0.070257*sin(d) - \
-		 0.006758*cos(2*d) + 0.000907*sin(2*d) - \
-		 0.002697*cos(3*d) + 0.00148*sin(3*d);
-	# This formula is found in Solar energy engineering
-	# by Soteris A. Kalogirou page 55
-	# It looks like some sort of fourier expansion of the simpler
-	# formula above (decl = 23.45*sin(2pi/365*(284+N)) )
+    decl = 0.006918 - 0.399912*cos(d) + 0.070257*sin(d) - \
+         0.006758*cos(2*d) + 0.000907*sin(2*d) - \
+         0.002697*cos(3*d) + 0.00148*sin(3*d);
+    # This formula is found in Solar energy engineering
+    # by Soteris A. Kalogirou page 55
+    # It looks like some sort of fourier expansion of the simpler
+    # formula above (decl = 23.45*sin(2pi/365*(284+N)) )
 
-	return decl;
+    return decl;
 
 def sinSolarAltitude(latitude,longitude,utcTime):
-	lat = latitude/180.0*pi;
-	delta = declination(utcTime);
-	h = hourAngle(longitude,utcTime);
-	
-	return sin(lat)*sin(delta)+cos(lat)*cos(delta)*cos(h);
-	# From Solar Engineering page 58
+    lat = deg2rad(latitude);
+    delta = declination(utcTime);
+    h = hourAngle(longitude,utcTime);
+    
+    return sin(lat)*sin(delta)+cos(lat)*cos(delta)*cos(h);
+    # From Solar Engineering page 58
 
 def cosSolarZenith(latitude,longitude,utcTime):
-	return sinSolarAltitude(latitude,longitude,utcTime);
+    return sinSolarAltitude(latitude,longitude,utcTime);
 
 def sinSolarAzimuth(declination,h,sinAlpha,lat,lon,utcTime): # h = hourAngle,sinAlpha = sinSolarAltitude
-	   cosAlpha = sqrt(1-sinAlpha**2);
-	   sinz = cos(declination)*sin(h)/cosAlpha;
+       cosAlpha = sqrt(1-sinAlpha**2);
+       sinz = cos(declination)*sin(h)/cosAlpha;
 
-	   mask = cos(h) <= tan(declination)/tan(lat/180.0*pi);
-	   morning = apparentSolarTime(lon,utcTime) < 12;
-	   evening = apparentSolarTime(lon,utcTime) > 12;
+       mask = cos(h) <= tan(declination)/tan(lat/180.0*pi);
+       morning = apparentSolarTime(lon,utcTime) < 12;
+       evening = apparentSolarTime(lon,utcTime) > 12;
 
-	   sinz[mask & morning] = sin(-pi + abs(arcsin(sinz[mask & morning])));
-	   sinz[mask & evening] = sin(pi - arcsin(sinz[mask & evening]));
+       sinz[mask & morning] = sin(-pi + abs(arcsin(sinz[mask & morning])));
+       sinz[mask & evening] = sin(pi - arcsin(sinz[mask & evening]));
 
-	   return sinz;
+       return sinz;
 
 def cosIncidenceAngle(latitude, declination, slope, azimuth, hourangle):
-	L = latitude/180.0*pi;
-	d = declination;
-	b = slope;
-	z = azimuth; # Solar panel azimuth, not solar!
-	h = hourangle;
+    L = deg2rad(latitude);
+    d = declination;
+    b = slope;
+    z = azimuth; # Solar panel azimuth, not solar!
+    h = hourangle;
 
-	return sin(L)*sin(d)*cos(b) - cos(L)*sin(d)*sin(b)*cos(z) + \
-		cos(L)*cos(d)*cos(h)*cos(b) + sin(L)*cos(d)*cos(h)*sin(b)*cos(z) \
-		+ cos(d)*sin(h)*sin(b)*sin(z);
-	# from page 60 in Solar Energy Engineering
+    # Speed optimization.
+    # Previously, 80% of time was spent in this function. After, only 50% is spent here.
+    # (Runtime for one month from 180secs to 130secs)
+    # This is the main target for future optimization - the current implementation is probably as good as it gets with just numpy...
+    sb = sin(b)
+    cb = cos(b)
+    ch = cos(h)
+    sd = sin(d)
+    cod = cos(d)
+    A = sb*cos(z)
+    
+    return sin(L)*(sd*cb + cod*ch*A) + \
+        cos(L)*(ch*cb - sd*A)  \
+        + cod*sin(h)*sb*sin(z);
+
+    # Original return function
+    return sin(L)*sin(d)*cos(b) - cos(L)*sin(d)*sin(b)*cos(z) + \
+        cos(L)*cos(d)*cos(h)*cos(b) + sin(L)*cos(d)*cos(h)*sin(b)*cos(z) \
+        + cos(d)*sin(h)*sin(b)*sin(z);
+    # from page 60 in Solar Energy Engineering
 
 
-def diffuseRadiation(latitude,longitude,utcTime,I,I_solar,sinalpha, mask):
-	
-	
-	Z = sinalpha;
-	ClearnessOfSkyIndex = zeros(I.shape);
-	ClearnessOfSkyIndex[mask] = I[mask]/I_solar[mask];
-	I_d = ones(I.shape);
+def diffuseRadiation(latitude, longitude, utcTime, I, I_solar, sinalpha, mask):
+    
+    
+    Z = sinalpha;
+    ClearnessOfSkyIndex = zeros(I.shape);
+    ClearnessOfSkyIndex[mask] = I[mask]/I_solar[mask];
+    I_d = ones(I.shape);
 
-	# The following formula is equation 3 in Diffuse Fraction Correlations
-	# by Reindel, solar energy vol 45, no 1 pp 1-7 1990.
-	# If we also had relative humidity (and temperature, which we do)
-	# we would have used formula 2 instead.
+    # The following formula is equation 3 in Diffuse Fraction Correlations
+    # by Reindel, solar energy vol 45, no 1 pp 1-7 1990.
+    # If we also had relative humidity (and temperature, which we do)
+    # we would have used formula 2 instead.
 
-	negIndex = ClearnessOfSkyIndex<-0.1;
-	lowIndex = (ClearnessOfSkyIndex<=0.3);
-	midIndex = (ClearnessOfSkyIndex>0.3) & (ClearnessOfSkyIndex<0.78);
-	higIndex = (ClearnessOfSkyIndex >= 0.78);
-	toohighIndex = ClearnessOfSkyIndex>1.1;
+    negIndex = ClearnessOfSkyIndex<-0.1;
+    lowIndex = (ClearnessOfSkyIndex<=0.3);
+    midIndex = (ClearnessOfSkyIndex>0.3) & (ClearnessOfSkyIndex<0.78);
+    higIndex = (ClearnessOfSkyIndex >= 0.78);
+    toohighIndex = ClearnessOfSkyIndex>1.1;
 
-	# Only look at places with solar altitude above 10 degrees
-	negIndex = negIndex & mask;
-	lowIndex = lowIndex & mask;
-	midIndex = midIndex & mask;
-	higIndex = higIndex & mask;
-	toohighIndex = toohighIndex & mask;
+    # Only look at places with solar altitude above 10 degrees
+    negIndex = negIndex & mask;
+    lowIndex = lowIndex & mask;
+    midIndex = midIndex & mask;
+    higIndex = higIndex & mask;
+    toohighIndex = toohighIndex & mask;
 
-	T = float(latitude.shape[0] * latitude.shape[1]);
+    T = float(latitude.shape[0] * latitude.shape[1]);
 
-	if (negIndex.any()):
-		print("Clearness of Sky index negative! " + utcTime.ctime(), file=sys.stderr);
-		print(numpy.min(ClearnessOfSkyIndex), file=sys.stderr);
-		print(numpy.where(negIndex == True)[0].shape[0]/T*100, file=sys.stderr);
-	if (toohighIndex.any()):
-		print("Clearness of Sky index (much) greater than 1! " + utcTime.ctime(), file=sys.stderr);
-		print(numpy.max(ClearnessOfSkyIndex), file=sys.stderr);
-		print(numpy.where(toohighIndex == True)[0].shape[0]/T*100, file=sys.stderr);
-	I_d[lowIndex] = 1.020 - 0.254*ClearnessOfSkyIndex[lowIndex] + 0.0123 * Z[lowIndex];
-	I_d[(lowIndex) & (I_d > 1.0)] = 1.0;
-	
-	I_d[midIndex] = 0.1400 - 1.749*ClearnessOfSkyIndex[midIndex] + 0.177 * Z[midIndex];
-	I_d[(midIndex) & (I_d > 0.97)] = 0.97;
-	I_d[(midIndex) & (I_d < 0.1)] = 0.1;
+    if (negIndex.any() and VERBOSE):
+        print("Clearness of Sky index negative! " + utcTime.ctime(), file=sys.stderr);
+        print(numpy.min(ClearnessOfSkyIndex), file=sys.stderr);
+        print(numpy.where(negIndex == True)[0].shape[0]/T*100, file=sys.stderr);
+    if (toohighIndex.any() and VERBOSE):
+        print("Clearness of Sky index (much) greater than 1! " + utcTime.ctime(), file=sys.stderr);
+        print(numpy.max(ClearnessOfSkyIndex), file=sys.stderr);
+        print(numpy.where(toohighIndex == True)[0].shape[0]/T*100, file=sys.stderr);
+    I_d[lowIndex] = 1.020 - 0.254*ClearnessOfSkyIndex[lowIndex] + 0.0123 * Z[lowIndex];
+    I_d[(lowIndex) & (I_d > 1.0)] = 1.0;
+    
+    I_d[midIndex] = 0.1400 - 1.749*ClearnessOfSkyIndex[midIndex] + 0.177 * Z[midIndex];
+    I_d[(midIndex) & (I_d > 0.97)] = 0.97;
+    I_d[(midIndex) & (I_d < 0.1)] = 0.1;
 
-	I_d[higIndex] = 0.486*ClearnessOfSkyIndex[higIndex] - 0.182*Z[higIndex];
-	I_d[(higIndex) & (I_d < 0.1)] = 0.1;
+    I_d[higIndex] = 0.486*ClearnessOfSkyIndex[higIndex] - 0.182*Z[higIndex];
+    I_d[(higIndex) & (I_d < 0.1)] = 0.1;
 
-	return I_d * I;
+    return I_d * I;
 
 
 # Example orientation function for Hay Davies model.
 # This is simply the zero slope, where 
 def zeroSlopeFunction(lat,lon,utcTime):
-	slope = zeros(lat.shape);
-	orientation = slope;
-	return (slope,orientation);
+    slope = zeros(lat.shape);
+    orientation = slope;
+    return (slope,orientation);
 
 def testSlopeFunction(lat,lon,utcTime):
-	slope = zeros(lat.shape) + 32.*pi/180.0; # 32 degrees
-	orientation = zeros(lat.shape);
-	return (slope,orientation);
+    slope = zeros(lat.shape) + 32.*pi/180.0; # 32 degrees
+    orientation = zeros(lat.shape); # Due south
+    return (slope,orientation);
 
 def fullTrackingSlopeFunction(lat,lon,utcTime):
-	   decl = declination(utcTime);
-	   h = hourAngle(lon,utcTime);
-	   sinAlpha = sinSolarAltitude(lat,lon,utcTime);
-	   Zs = sinSolarAzimuth(decl,h,sinAlpha,lat,lon,utcTime);
-	   
-	   slope = arccos(sinAlpha); # sin(alpha) = cos(phi)
-	   orientation = arcsin(Zs);
+    decl = declination(utcTime);
+    h = hourAngle(lon,utcTime);
+    sinAlpha = sinSolarAltitude(lat,lon,utcTime);
+    Zs = sinSolarAzimuth(decl,h,sinAlpha,lat,lon,utcTime);
 
-	   return (slope,orientation);
+    slope = arccos(sinAlpha); # sin(alpha) = cos(phi)
+    orientation = arcsin(Zs);
+
+    return (slope,orientation);
 
 
 #def newHayDavies(grbs,outfluxgrbs,orientationFunction):
 def newHayDavies(I,O,latitude,longitude,utcTime,orientationFunction):
-	""" Calculate diffuse, beam and ground reflected component of
-	    solar influx data, returning the sum of all three to calculate
-	    the radiation on a tilted surface """
+    """ Calculate diffuse, beam and ground reflected component of
+        solar influx data, returning the sum of all three to calculate
+        the radiation on a tilted surface """
 
-	#utcTime = datetime.datetime(grbs.year,grbs.month,grbs.day,grbs.hour);
-	# grbs.validDate is not updated because of some bug in pygrib;
-	
-	(slope, azimuth) = orientationFunction(latitude,longitude,utcTime);
-	# (beta, Z_s) in the litterature
+    #utcTime = datetime.datetime(grbs.year,grbs.month,grbs.day,grbs.hour);
+    # grbs.validDate is not updated because of some bug in pygrib;
 
-	Z = sinSolarAltitude(latitude,longitude,utcTime);
-	# as in the article, ignore solar altitudes lower than some degrees
-	# We do it to avoid dividing by zero.
-	mask = Z >= sin(5.*pi/180.0);
-	I_extraterrestial = zeros(I.shape);
-	I_extraterrestial[mask] = solarConstant(utcTime)*Z[mask];
+    (slope, azimuth) = orientationFunction(latitude,longitude,utcTime);
+    # (beta, Z_s) in the litterature
+
+    Z = sinSolarAltitude(latitude,longitude,utcTime);
+    # as in the article, ignore solar altitudes lower than some degrees
+    # We do it to avoid dividing by zero.
+    mask = Z >= sin(5.*pi/180.0);
+    I_extraterrestial = zeros(I.shape);
+    I_extraterrestial[mask] = solarConstant(utcTime)*Z[mask];
 
 
 
-	# Get the diffuse, beam and ground components of radiation.
-	# First get diffuse by a formla from Reindel:
+    # Get the diffuse, beam and ground components of radiation.
+    # First get diffuse by a formla from Reindel:
 
-	I_d = diffuseRadiation(latitude,longitude,utcTime,I,I_extraterrestial,Z,mask);
+    I_d = diffuseRadiation(latitude,longitude,utcTime,I,I_extraterrestial,Z,mask);
 
-	# Then, since Ground reflected component is zero
-	# in the horizontal plane (I_g_t propto (1-cos(beta)))
-	# we get that I, the total radiation, is I_d + I_b,
-	# I_b = beam component, and thus (see ref 1)
+    # Then, since Ground reflected component is zero
+    # in the horizontal plane (I_g_t propto (1-cos(beta)))
+    # we get that I, the total radiation, is I_d + I_b,
+    # I_b = beam component, and thus (see ref 1)
 
-	I_b = zeros(I.shape);
-	I_b[mask] = I[mask] - I_d[mask];
+    I_b = zeros(I.shape);
+    I_b[mask] = I[mask] - I_d[mask];
 
-	# Next up: Calculate anisotropy index:
+    # Next up: Calculate anisotropy index:
 
-	A = zeros(I.shape);
-	A[mask] = I_b[mask] / I_extraterrestial[mask];
-	
-	# Geometric factor:
+    A = zeros(I.shape);
+    A[mask] = I_b[mask] / I_extraterrestial[mask];
+    
+    # Geometric factor:
 
-	decl = declination(utcTime);
-	hourangle = hourAngle(longitude,utcTime);
-	R = cosIncidenceAngle(latitude, decl, slope, azimuth, hourangle)/ Z;
+    decl = declination(utcTime);
+    hourangle = hourAngle(longitude,utcTime);
+    R = cosIncidenceAngle(latitude, decl, slope, azimuth, hourangle)/ Z;
 
-	# Horizontal brightening diffuse correction factor
-	f = zeros(I.shape);
-	f[mask] = sqrt(I_b[mask]/I[mask]);
+    # Horizontal brightening diffuse correction factor
+    f = zeros(I.shape);
+    f[mask] = sqrt(I_b[mask]/I[mask]);
 
-	I_d_tilted = zeros(I.shape);
-	I_d_tilted[mask] = I_d[mask] * ((1-A[mask])*(1+cos(slope[mask]))/2*(1+f[mask]*sin(slope[mask]/2)**3) + A[mask]*R[mask]);
+    I_d_tilted = zeros(I.shape);
+    I_d_tilted[mask] = I_d[mask] * ((1-A[mask])*(1+cos(slope[mask]))/2*(1+f[mask]*sin(slope[mask]/2)**3) + A[mask]*R[mask]);
 
-	I_g = zeros(I.shape);
-	I_g[mask] = O[mask]*(1-cos(slope[mask]))/2
+    I_g = zeros(I.shape);
+    I_g[mask] = O[mask]*(1-cos(slope[mask]))/2
 
-	return I_d_tilted + I_b*R + I_g;
+    return I_d_tilted + I_b*R + I_g;
 
-	
+    
 # ref 1: D.T Reindel et al: Evaluation of hourly tilted surface radiation models
 # solar energy vol. 45 no 1 pp 9-17 1990
 
 
 # This is the conversion function made by Suyash/Rachit.
 # The model is apparantly found in http://pvsat.de/EurosunBeyerrobustmodel.pdf
-# 				   (copy in doc/ directory)
+#                  (copy in doc/ directory)
 #   (A robust model for the MPP performance of different
 #   types of PV-modules applied for the performance check
 #   of grid connected systems)
