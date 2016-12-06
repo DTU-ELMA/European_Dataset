@@ -7,7 +7,7 @@ datadir = '../../Data/'
 inputdir = datadir + 'Generator_Data/'
 metadatadir = datadir + 'Metadata/'
 inputfiles = os.listdir(inputdir)
-inputfiles = [x for x in inputfiles if 'kml' in x]
+inputfiles = [x for x in inputfiles if '.kml' in x]
 
 
 def coordinate_string_to_latlon_pair(x):
@@ -177,8 +177,17 @@ for g in database.iterkeys():
     database[g]['ramp'] = ramprates[database[g]['primaryfuel']]
 
 # # Linear cost set by fuel type [$ / MWh] - Uniformly chosen from 90-110% of below.
-lincosts = {u'Biomass': 39.5, 'Coal': 38.6, 'Fuel Oil': 122.2, 'Geothermal': 0.0, 'Hydro': 6.4, 'Lignite': 23.8,
-            'Natural Gas': 55.6, 'Nuclear': 11.8, 'Unknown': 130.0, 'Waste': 39.5}
+lincosts = {
+    u'Biomass': 39.5,
+    'Coal': 38.6,
+    'Fuel Oil': 122.2,
+    'Geothermal': 0.0,
+    'Hydro': 6.4,
+    'Lignite': 23.8,
+    'Natural Gas': 55.6,
+    'Nuclear': 11.8,
+    'Unknown': 130.0,
+    'Waste': 39.5}
 
 # Jitter generators by +-10%
 for g in database.iterkeys():
