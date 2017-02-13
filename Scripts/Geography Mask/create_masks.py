@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 geography = np.load('geography_COSMO.npz')
 lats = geography['lats']
@@ -8,6 +7,7 @@ countries = geography['countries']
 onshore = geography['onshore']
 heights = geography['heights']
 
+# Country codes that will be included in the mask.
 includedcountries = {
     'ALB', 'AUT', 'BEL', 'BGR', 'BIH',
     'CHE', 'CZE', 'DEU', 'DNK', 'ESP', 'FRA',
@@ -15,6 +15,7 @@ includedcountries = {
     'MNE', 'NLD', 'POL', 'POR', 'ROU', 'SRB',
     'SVK', 'SVN'}
 
+# Initialize arrays of False
 windmask = np.zeros(lats.shape, dtype=bool)
 solarmask = np.zeros(lats.shape, dtype=bool)
 
