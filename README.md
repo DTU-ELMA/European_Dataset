@@ -37,3 +37,14 @@ Download all relevant datafiles from www.globalenergyobservatory.com in kml form
 Run ./Scripts/Generator_Handling/1-Extract_GEO_Files to generate a database.
 Run ./Scripts/Generator_Handling/2-assign_generators_to_nodes to associate generators with network nodes, and build the final database.
 
+# Contributors
+
+**Tue Vissing Jensen**: Repository manager, organizer. Contributor if not listed below.
+
+**Hugo de Sevin**: COSMO-REA6 conversion code. UK grid specification.
+
+**Pierre Pinson**: ECMWF Extraction code.
+
+**Anders Søndergaard**: Main wind/solar conversion loop (Together with Gorm Bruun Andresen), wind/solar conversion data files.
+
+**Gorm Andresen**: Smoothed wind turbine curves.
