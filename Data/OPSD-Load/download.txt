@@ -1,0 +1,4 @@
+Load is generated based on open-power-system-data time series, as of 23-9-2017 available at:
+https://data.open-power-system-data.org/time_series/2017-07-09/
+
+From this URL, download "time_series_60min_singleindex.csv" and place it in this directory.
