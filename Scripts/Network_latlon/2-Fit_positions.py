@@ -4,7 +4,7 @@
 
 __author__ = "Tue Vissing Jensen"
 __license__ = "MIT"
-__version__ = "1.0"
+__version__ = "1.1"
 __maintainer__ = "Tue Vissing Jensen"
 __email__ = "tvjens@elektro.dtu.dk"
 
@@ -108,7 +108,7 @@ def calcpoly2d(x, y, c):
             out += c[curoffset+i] * x**i * y**(o-i)
     return out
 
-fitorder = 5
+fitorder = 3
 
 clat = fitpoly2d(x, y, df.lat, fitorder)
 clon = fitpoly2d(x, y, df.lon, fitorder)
@@ -125,6 +125,7 @@ pos = nx.get_node_attributes(G, 'pos')
 fitpos = {k: (calcpoly2d(v[0], v[1], clon), calcpoly2d(v[0], v[1], clat)) for k, v in pos.iteritems()}
 nx.set_node_attributes(G, 'pos', fitpos)
 
+# Assign countries to nodes
 countrydata = np.loadtxt('bus_countries.csv', dtype=str, delimiter=',')
 countrydict = {p[0]: p[1] for p in countrydata}
 
@@ -133,12 +134,11 @@ outset = set(('UKR', 'SWE', 'NOR', 'GBR', 'MAR'))
 for n in G.nodes_iter():
     if countrydict[n] in outset:
         countrydict[n] = countrydict[G.edge[n].keys()[0]]
+nx.set_node_attributes(G, 'country', countrydict)
 
-
+# Edge properties
 Xdict = nx.get_edge_attributes(G, 'X')
 Ydict = {k: 1/v for k, v in Xdict.iteritems()}
 nx.set_edge_attributes(G, 'Y', Ydict)
-
-nx.set_node_attributes(G, 'country', countrydict)
 
 nx.write_gpickle(G, metadatadir + 'network_postfit.gpickle')

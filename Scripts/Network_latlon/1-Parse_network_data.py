@@ -26,9 +26,14 @@ with open(linkfile) as afile:
 				Xold = G[n1][n2]['X']
 				limitold = G[n1][n2]['limit']
 				Xnew = 1/(1./X+1./Xold)
-				G.add_edge(n1,n2,X = Xnew,limit = limit + limitold)
+                                numold = G[n1][n2]['num']
+				G.add_edge(
+                                        n1, n2,
+                                        X = Xnew,
+                                        limit = limit + limitold,
+                                        num=numold+1)
 			else:
-				G.add_edge(n1,n2,X = X,limit = limit)
+				G.add_edge(n1,n2,X = X,limit = limit, num = 1)
 		else:
 			print "Unable to find nodes {0} and {1}!".format(n1,n2)
 

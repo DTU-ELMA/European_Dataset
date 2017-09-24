@@ -30,6 +30,7 @@ edgedf = pd.DataFrame(
         'limit': [edged[n1][n2]['limit'] for n1, n2 in edgeorder],
         'X': [edged[n1][n2]['X'] for n1, n2 in edgeorder],
         'Y': [edged[n1][n2]['Y'] for n1, n2 in edgeorder],
+        'numLines': [edged[n1][n2]['num'] for n1, n2 in edgeorder],
         'length': [gcdistance(noded[n1]['pos'][1], noded[n2]['pos'][1], noded[n1]['pos'][0], noded[n2]['pos'][0]) for n1, n2 in edgeorder]
     },
     index=range(len(edgeorder))
@@ -44,7 +45,7 @@ nodedf.to_csv(
 )
 edgedf.to_csv(
     outdir + 'network_edges.csv',
-    columns=['fromNode', 'toNode', 'X', 'Y', 'limit', 'length'],
+    columns=['fromNode', 'toNode', 'X', 'Y', 'numLines', 'limit', 'length'],
     index=False,
     encoding='UTF-8'
 )
