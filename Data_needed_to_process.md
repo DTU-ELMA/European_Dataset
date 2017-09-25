@@ -72,3 +72,13 @@ Generator data files are downloaded as country/fuel type packages, located in
 './Data/Generator_Data/GEO_PP_[Type]_[Country]_2000-2009.kml'
 
 E.g. 'GEO_PP_Oil_Serbia_2000-2009.kml' contains information on Oil-fired plants in Serbia.
+
+# ENTSO-E Load
+
+Entso-e load files are downloaded as country packages from
+
+https://www.entsoe.eu/data/data-portal/country-packages/Pages/default.aspx
+
+These should be placed as
+`./Data/ENTSOE-load/excel_files/XXX_YYYY.xls`
+where `XXX` is a three-letter country code (ISO Alpha-3), e.g. `AUT_2012.xls` contains data from Austria for 2012.
