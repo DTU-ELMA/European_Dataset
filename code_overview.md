@@ -3,15 +3,17 @@
 This document attempts to give an overview of the scripts needed to be run in order to re-generate the dataset.
 For a list of required data, see Data\_Overview.md.
 
-This document is divided into 4 parts, each dealing with a separate part of the dataset:
+This document is divided into 5 parts, each dealing with a separate part of the dataset:
 
 1. Transmission Network
 2. Generator Database
 3. Renewable production data
 4. Demand data
+5. Saving CSV files
 
 In order to proceed with points 2-4, point 1 must have been executed.
 Point 4 further requires that the latitude/longitude grid from point 3 has been extracted.
+Point 5 depends on the relevant parts of the preceding points.
 
 # 1. Transmission network
 
@@ -46,6 +48,14 @@ TODO: Add me
 
 TODO: Add me
 
+## Aggregating wind and solar production to the nodal domain
+
+TODO: Add me
+
+## Notes for converting COSMO data
+
+TODO: Add me
+
 # 4. Demand signal
 
 ## ENTSOE load data to nodal signals
@@ -54,5 +64,14 @@ TODO: Add me
 
 (Requires the latitude and longitude grids from the ECMWF data to be present as ./Data/Metadata/{lats, lons}\_ECMWF.npy)
 
+(Requires the projection matrixes from the ECMWF data to have been built: `./Data/Metadata/loadtransfercsr_ECMWF.npz`)
 
-TODO: Add me
+Running `extract_excel_files.py` parses the raw ENTSO-E country packages into .npy files.
+
+Running `load_to_maps.py` then projects these .npy files according to the population in each grid cell.
+
+Finally, running project_nodal_load.py then aggregates these maps of electrical demand onto the nodal domain.
+
+# 5. Saving CSV files
+
+The scripts located in `./Scripts/Save_{forecast,network,signal}_csv/` translates .npy files into the csv format, with the output located in `./Output_Data/{Nodal_FC,Metadata,Nodal_TS}/`, respectively.
