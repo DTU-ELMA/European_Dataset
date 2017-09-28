@@ -23,10 +23,13 @@ parser.add_argument('-l', '--last', help='Last year to extract', default=default
 parser.add_argument('-fm', help='First month to extract', default=defaults.startmonth, type=int, metavar="first month")
 parser.add_argument('-lm', help='Last month to extract', default=defaults.endmonth, type=int, metavar="last month")
 parser.add_argument('-onm', '--onshoremap', metavar="onshoremap", type=str, help='Numpy file containing the onshore map', default=defaults.onshoremapfilename)
-parser.add_argument('-onc', '--onshoreconf', metavar="onshore_config_file", nargs=1, type=str, help='File containing characteristics of the onshore wind turbine to use', default=defaults.onshoreturbinecfg)
-parser.add_argument('-ofc', '--offshoreconf', metavar="offshore_config_file", nargs=1, type=str, help='File containing characteristics of the offshore wind turbine to use', default=defaults.offshoreturbinecfg)
+parser.add_argument('-onc', '--onshoreconf', metavar="onshore_config_file", type=str, help='File containing characteristics of the onshore wind turbine to use', default=defaults.onshoreturbinecfg)
+parser.add_argument('-ofc', '--offshoreconf', metavar="offshore_config_file", type=str, help='File containing characteristics of the offshore wind turbine to use', default=defaults.offshoreturbinecfg)
 
 args = parser.parse_args()
+
+print('Conversion arguments:')
+print(args)
 
 onshoremap = np.load(args.onshoremap)
 
