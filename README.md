@@ -13,12 +13,12 @@ An overview of the data required to re-generate the dataset is given in `data_re
 
 # Contributors
 
-**Tue Vissing Jensen**: Repository manager, organizer. Contributor if not listed below.
+**Tue Vissing Jensen (Technical University of Denmark)**: Repository manager, organizer. Contributor if not listed below.
 
-**Hugo de Sevin**: COSMO-REA6 conversion code. UK grid specification.
+**Hugo de Sevin (Technical University of Denmark)**: COSMO-REA6 conversion code. UK grid specification.
 
-**Pierre Pinson**: ECMWF Extraction code.
+**Pierre Pinson (Technical University of Denmark)**: ECMWF MARS Extraction code.
 
-**Anders Søndergaard**: Main wind/solar conversion loop (Together with Gorm Bruun Andresen), wind/solar conversion data files.
+**Anders Søndergaard (Aarhus University, Denmark)**: Main wind/solar conversion loop (Together with Gorm Bruun Andresen), wind/solar conversion data files.
 
-**Gorm Andresen**: Smoothed wind turbine curves.
+**Gorm Andresen (Aarhus University, Denmark)**: Smoothed wind turbine curves.
