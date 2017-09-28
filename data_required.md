@@ -6,9 +6,102 @@ Note that filenames like './' refer to the root folder containing LICENSE.markdo
 
 # Transmission Grid Data
 
--- TODO: ADD ---
+Transmission data must be extracted from the published data files which, as of 2017-09-28 are located at:
 
-# ECMWF data
+https://www.powerworld.com/knowledge-base/updated-and-validated-power-flow-model-of-the-main-continental-european-transmission-network
+
+This file can be opened, and the necessary data extracted, using the freely available PowerWorld Viewer program, accesible at the above website.
+
+Three files must be extracted, and located in './Scripts/Network_latlon':
+
+1. buses.csv
+2. lines.csv
+3. bus_countries.csv
+
+These files contains the following:
+
+## buses.csv
+
+Tab-separated list of bus numbers, positions, busnames and nominal voltages.
+Example first lines:
+```
+BusNum  Longitude   Latitude    BusName BusNomVolt
+1   -0.716864   0.136182    P-1 380
+2   -0.745274   0.077573    P-2 380
+```
+I.e. bus number 1 is located at the indicated long- and latitude coordinate, was given the ID P-1 and has a nominal voltage of 380 kV.
+
+The `Longitude` and `Latitude` fields are populated by the 'display coordinates,' which are used internally by the PowerWorld program; they are not the true latitudes and longitudes of the buses.
+To populate these fields, use the included function described in the PowerWorld manual:
+
+https://www.powerworld.com/WebHelp/Content/MainDocumentation_HTML/Populate_Lon_Lat_with_Display_X_Y.htm
+
+## lines.csv
+
+Tab-separated list of lines' start- and end-buses, susceptances and thermal limits.
+
+Example first lines:
+```
+BusNum  BusNum:1    LineX   LineAMVA
+1   2   0.02348 0
+1   2   0.02345 0
+
+```
+
+## bus_countries.csv
+
+**Comma**-separated list of bus IDs and corresponding countries in Alpha-3 format.
+
+Example first lines:
+```
+#BusNum,AreaName
+1,POR
+2,POR
+```
+
+# Generator data from GlobalEnergyObservatory
+
+Generator data files are downloaded as country/fuel type packages, located in 
+
+'./Data/Generator_Data/GEO_PP_[Type]_[Country]_2000-2009.kml'
+
+E.g. 'GEO_PP_Oil_Serbia_2000-2009.kml' contains information on Oil-fired plants in Serbia.
+
+# Electrical Demand Data
+
+## ENTSO-E load files
+
+Entso-e load files are downloaded as country packages from
+
+https://www.entsoe.eu/data/data-portal/country-packages/Pages/default.aspx
+
+These should be placed as
+`./Data/ENTSOE-load/excel_files/XXX_YYYY.xls`
+where `XXX` is a three-letter country code (ISO Alpha-3), e.g. `AUT_2012.xls` contains data from Austria for 2012.
+
+## Population Density data
+
+For the grid defined by `./Data/Metadata/lats_ECMWF.npy` and `Data/Metadata/lons_ECMWF.npy`, a file containing the population density inside each grid cell, located as `./Data/Metadata/popdens_ECMWF.npy` is needed.
+
+To generate this population density grid, we here use the population density information available at 
+http://sedac.ciesin.columbia.edu/gpw
+
+The required data is:
+```
+The raster data are at 2.5 arc-minutes resolution. This archive contains the 
+following grid(s):
+
+p10ag  population counts in 2010, adjusted to match UN totals
+
+The data are stored in geographic coordinates of decimal degrees based on the
+World Geodetic System spheroid of 1984 (WGS84).
+```
+
+Using any GIS software, this data can be resampled to the grid of the ECMWF meteorological data (lons X lats: -12:0.125:41 X 33:0.125:72), and subsequently converted to a numpy array.
+
+# Renewable production data
+
+## ECMWF data
 
 Forecasts given at YYYY-MM-DD HH:MM are placed in
 './Data/ECMWF-data/YYYYMMDDHH/',
@@ -128,7 +221,7 @@ edition      centre       typeOfLevel  level        dataDate     stepRange    da
 91 of 91 grib messages in ctr_P165_LSFC
 ```
 
-# COSMO-REA6 data
+## COSMO-REA6 data
 
 This data was provided by Christoph Bollmeyer over a private connection.
 For the current project maintainer, see the project homepage: https://www.herz-tb4.uni-bonn.de/
@@ -164,20 +257,4 @@ edition      centre       typeOfLevel  levels       dataDate     stepRange    sh
 20 of 20 grib messages in laf20120101000000
 ```
 
-# GlobalEnergyObservatory
 
-Generator data files are downloaded as country/fuel type packages, located in 
-
-'./Data/Generator_Data/GEO_PP_[Type]_[Country]_2000-2009.kml'
-
-E.g. 'GEO_PP_Oil_Serbia_2000-2009.kml' contains information on Oil-fired plants in Serbia.
-
-# ENTSO-E Load
-
-Entso-e load files are downloaded as country packages from
-
-https://www.entsoe.eu/data/data-portal/country-packages/Pages/default.aspx
-
-These should be placed as
-`./Data/ENTSOE-load/excel_files/XXX_YYYY.xls`
-where `XXX` is a three-letter country code (ISO Alpha-3), e.g. `AUT_2012.xls` contains data from Austria for 2012.
