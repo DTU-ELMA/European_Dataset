@@ -11,9 +11,15 @@ An overview of the scripts provided is  given in `code_overview.md`.
 
 An overview of the data required to re-generate the dataset is given in `data_required.md`
 
+# Dataset permalink
+
+The RE-Europe Dataset package may be found at:
+
+https://doi.org/10.5281/zenodo.620228
+
 # Contributors
 
-The work presented here was supported by the Danish Council for Strategic Research through the project ``5s --- Future Electricity Markets'', no. 12--132636/DSF.
+This project was supported by the Danish Council for Strategic Research through the project ``5s --- Future Electricity Markets'', no. 12--132636/DSF.
 
 **Tue Vissing Jensen (Technical University of Denmark)**: Repository manager, organizer. Contributor if not listed below.
 
