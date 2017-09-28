@@ -1,6 +1,6 @@
 x	y	lat	lon	loc	node
 -0.843312	-0.17491	39.333333333	-8.9333333333	Rio.Maior-Portugal	'20'
--0.717392	0.298408	43.35	-8.4	Meson.do.Vento-Galicia-Spain	'29' 
+-0.717392	0.298408	43.35	-8.4	Meson.do.Vento-Galicia-Spain	'29'
 -0.487593	-0.596556	36.211228	-5.381201	Pinar.del.Rey-Spain	'215'
 -0.274105	0.9141	48.02	-4.13136	Loscoat-Bretagne-France	'306'
 -0.063399	0.262323	43.3666666667	-1.6835	Argia(Ascain)-France	'39'
