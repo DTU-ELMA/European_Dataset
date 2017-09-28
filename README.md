@@ -13,6 +13,8 @@ An overview of the data required to re-generate the dataset is given in `data_re
 
 # Contributors
 
+The work presented here was supported by the Danish Council for Strategic Research through the project ``5s --- Future Electricity Markets'', no. 12--132636/DSF.
+
 **Tue Vissing Jensen (Technical University of Denmark)**: Repository manager, organizer. Contributor if not listed below.
 
 **Hugo de Sevin (Technical University of Denmark)**: COSMO-REA6 conversion code. UK grid specification.
