@@ -217,11 +217,11 @@ tosetlist = {
     '3913': 730.,
     '43676': 855.3,
     '4396': 372.,
-    '45044': 345.,
+    '45044': 355.,
     '4938': 868.,
     '5270': 466.,
     '5682': 2026.,
-    '5910': 2087.
+    '5910': 1087.
 }
 for g, p in tosetlist.iteritems():
     database[g]['capacity'] = p
@@ -263,7 +263,8 @@ for g in database.iterkeys():
 
 # # # Removing generators that are not connected to mainland Europe or are known duplicates
 toremovelist = [
-    '43804', '43815',  # Canary Islands, spain
+    '43804',  # Canary Islands, spain
+    '43815',  # Canary Islands, spain
     '42778',  # Crete, Greece
     '42779',  # Chios, Greece
     '2402',  # Duplicate of 39749
